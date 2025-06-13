@@ -31,8 +31,34 @@ class ChronoForge_DB_Manager {
      */
     public function __construct() {
         global $wpdb;
+
+        // Check if wpdb is available
+        if (!$wpdb) {
+            throw new Exception('WordPress database object not available');
+        }
+
         $this->wpdb = $wpdb;
         $this->table_prefix = $wpdb->prefix . 'chrono_forge_';
+
+        // Test database connection
+        if (!$this->test_database_connection()) {
+            throw new Exception('Database connection test failed');
+        }
+    }
+
+    /**
+     * Test database connection
+     *
+     * @return bool
+     */
+    private function test_database_connection() {
+        try {
+            $result = $this->wpdb->get_var("SELECT 1");
+            return $result === '1';
+        } catch (Exception $e) {
+            chrono_forge_safe_log("Database connection test failed: " . $e->getMessage(), 'error');
+            return false;
+        }
     }
 
     // ========================================

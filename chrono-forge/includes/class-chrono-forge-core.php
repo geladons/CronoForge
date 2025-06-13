@@ -219,6 +219,15 @@ class ChronoForge_Core {
         } catch (Exception $e) {
             chrono_forge_safe_log('Exception during component initialization: ' . $e->getMessage(), 'error');
             add_action('admin_notices', array($this, 'component_init_error_notice'));
+
+            // Emergency mode - disable problematic components
+            $this->enable_emergency_mode($e->getMessage());
+        } catch (Error $e) {
+            chrono_forge_safe_log('Fatal error during component initialization: ' . $e->getMessage(), 'error');
+            add_action('admin_notices', array($this, 'component_init_error_notice'));
+
+            // Emergency mode - disable problematic components
+            $this->enable_emergency_mode($e->getMessage());
         }
     }
 
@@ -527,18 +536,42 @@ class ChronoForge_Core {
      * @return array Информация о состоянии
      */
     public function get_plugin_status() {
-        return array(
-            'version' => CHRONO_FORGE_VERSION,
-            'db_manager' => $this->db_manager !== null,
-            'ajax_handler' => $this->ajax_handler !== null,
-            'shortcodes' => $this->shortcodes !== null,
-            'payment_manager' => $this->payment_manager !== null,
-            'notification_manager' => $this->notification_manager !== null,
-            'calendar_integration' => $this->calendar_integration !== null,
-            'admin_menu' => $this->admin_menu !== null,
-            'system_checks' => chrono_forge_check_system_limits(),
-            'performance' => chrono_forge_get_performance_info()
-        );
+        try {
+            $status = array(
+                'version' => CHRONO_FORGE_VERSION,
+                'db_manager' => $this->db_manager !== null,
+                'ajax_handler' => $this->ajax_handler !== null,
+                'shortcodes' => $this->shortcodes !== null,
+                'payment_manager' => $this->payment_manager !== null,
+                'notification_manager' => $this->notification_manager !== null,
+                'calendar_integration' => $this->calendar_integration !== null,
+                'admin_menu' => $this->admin_menu !== null,
+            );
+
+            // Safely add system checks if function exists
+            if (function_exists('chrono_forge_check_system_limits')) {
+                $status['system_checks'] = chrono_forge_check_system_limits();
+            } else {
+                $status['system_checks'] = array('status' => 'unavailable');
+            }
+
+            // Safely add performance info if function exists
+            if (function_exists('chrono_forge_get_performance_info')) {
+                $status['performance'] = chrono_forge_get_performance_info();
+            } else {
+                $status['performance'] = array('status' => 'unavailable');
+            }
+
+            return $status;
+
+        } catch (Exception $e) {
+            chrono_forge_safe_log("Error getting plugin status: " . $e->getMessage(), 'error');
+            return array(
+                'version' => CHRONO_FORGE_VERSION,
+                'error' => 'Unable to retrieve full status',
+                'message' => $e->getMessage()
+            );
+        }
     }
 
     /**
@@ -588,5 +621,88 @@ class ChronoForge_Core {
             echo sprintf(__('ChronoForge: %s', 'chrono-forge'), esc_html($message));
             echo '</p></div>';
         });
+    }
+
+    /**
+     * Enable emergency mode when critical errors occur
+     *
+     * @since 1.0.0
+     * @param string $error_message Error message
+     * @return void
+     */
+    private function enable_emergency_mode($error_message) {
+        // Set emergency mode flag
+        update_option('chrono_forge_emergency_mode', true);
+        update_option('chrono_forge_emergency_error', $error_message);
+        update_option('chrono_forge_emergency_time', current_time('mysql'));
+
+        // Disable problematic components
+        $this->payment_manager = null;
+        $this->notification_manager = null;
+        $this->calendar_integration = null;
+
+        chrono_forge_safe_log("Emergency mode enabled due to: {$error_message}", 'error');
+
+        // Add emergency mode notice
+        add_action('admin_notices', array($this, 'emergency_mode_notice'));
+    }
+
+    /**
+     * Emergency mode admin notice
+     *
+     * @since 1.0.0
+     * @return void
+     */
+    public function emergency_mode_notice() {
+        $error_message = get_option('chrono_forge_emergency_error', 'Unknown error');
+        echo '<div class="notice notice-warning"><p>';
+        echo '<strong>ChronoForge Emergency Mode:</strong> ';
+        echo sprintf(__('Плагин работает в аварийном режиме из-за ошибки: %s', 'chrono-forge'), esc_html($error_message));
+        echo ' <a href="#" onclick="chronoForgeDisableEmergencyMode()">' . __('Попробовать восстановить', 'chrono-forge') . '</a>';
+        echo '</p></div>';
+
+        // Add JavaScript for recovery
+        echo '<script>
+        function chronoForgeDisableEmergencyMode() {
+            if (confirm("' . __('Попытаться выйти из аварийного режима? Это может вызвать повторную ошибку.', 'chrono-forge') . '")) {
+                var data = {
+                    action: "chrono_forge_disable_emergency_mode",
+                    nonce: "' . wp_create_nonce('chrono_forge_emergency') . '"
+                };
+                jQuery.post(ajaxurl, data, function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert("' . __('Не удалось выйти из аварийного режима', 'chrono-forge') . '");
+                    }
+                });
+            }
+        }
+        </script>';
+    }
+
+    /**
+     * Check if plugin is in emergency mode
+     *
+     * @since 1.0.0
+     * @return bool
+     */
+    public function is_emergency_mode() {
+        return get_option('chrono_forge_emergency_mode', false);
+    }
+
+    /**
+     * Disable emergency mode
+     *
+     * @since 1.0.0
+     * @return bool
+     */
+    public function disable_emergency_mode() {
+        delete_option('chrono_forge_emergency_mode');
+        delete_option('chrono_forge_emergency_error');
+        delete_option('chrono_forge_emergency_time');
+
+        chrono_forge_safe_log("Emergency mode disabled", 'info');
+        return true;
     }
 }

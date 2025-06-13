@@ -59,6 +59,7 @@ class ChronoForge_Ajax_Handler {
         add_action('wp_ajax_chrono_forge_get_employee', array($this, 'get_employee_data'));
         add_action('wp_ajax_chrono_forge_get_employee_schedule', array($this, 'get_employee_schedule'));
         add_action('wp_ajax_chrono_forge_get_calendar_appointments', array($this, 'get_calendar_appointments'));
+        add_action('wp_ajax_chrono_forge_disable_emergency_mode', array($this, 'disable_emergency_mode'));
     }
 
     /**
@@ -1146,5 +1147,43 @@ class ChronoForge_Ajax_Handler {
 
         set_transient($transient_key, $current_count + 1, 60);
         return true;
+    }
+
+    /**
+     * Disable emergency mode via AJAX
+     *
+     * @since 1.0.0
+     * @return void
+     */
+    public function disable_emergency_mode() {
+        try {
+            // Security checks
+            if (!wp_verify_nonce($_POST['nonce'] ?? '', 'chrono_forge_emergency')) {
+                chrono_forge_safe_log('Security error: Invalid nonce in disable_emergency_mode', 'error');
+                wp_send_json_error(__('Ошибка безопасности', 'chrono-forge'));
+            }
+
+            if (!current_user_can('manage_options')) {
+                chrono_forge_safe_log('Access denied: User lacks manage_options capability in disable_emergency_mode', 'warning');
+                wp_send_json_error(__('Недостаточно прав доступа', 'chrono-forge'));
+            }
+
+            // Get plugin instance and disable emergency mode
+            $plugin_instance = function_exists('chrono_forge') ? chrono_forge() : null;
+            if ($plugin_instance && method_exists($plugin_instance, 'disable_emergency_mode')) {
+                $result = $plugin_instance->disable_emergency_mode();
+                if ($result) {
+                    wp_send_json_success(__('Аварийный режим отключен', 'chrono-forge'));
+                } else {
+                    wp_send_json_error(__('Не удалось отключить аварийный режим', 'chrono-forge'));
+                }
+            } else {
+                wp_send_json_error(__('Плагин недоступен', 'chrono-forge'));
+            }
+
+        } catch (Exception $e) {
+            chrono_forge_safe_log("Exception in disable_emergency_mode: " . $e->getMessage(), 'error');
+            wp_send_json_error(__('Произошла ошибка при отключении аварийного режима', 'chrono-forge'));
+        }
     }
 }

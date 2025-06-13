@@ -74,21 +74,43 @@ register_deactivation_hook(__FILE__, 'deactivate_chrono_forge');
  */
 function chrono_forge_init_plugin() {
     try {
+        // Check if WordPress is properly loaded
+        if (!function_exists('add_action')) {
+            error_log('ChronoForge: WordPress not properly loaded');
+            return null;
+        }
+
         // Load utility functions first
-        require_once CHRONO_FORGE_PLUGIN_DIR . 'includes/utils/functions.php';
+        $utils_file = CHRONO_FORGE_PLUGIN_DIR . 'includes/utils/functions.php';
+        if (!file_exists($utils_file)) {
+            error_log('ChronoForge: Utility functions file not found');
+            return null;
+        }
+        require_once $utils_file;
 
         // Load main plugin class
-        require_once CHRONO_FORGE_PLUGIN_DIR . 'includes/class-chrono-forge-core.php';
+        $core_file = CHRONO_FORGE_PLUGIN_DIR . 'includes/class-chrono-forge-core.php';
+        if (!file_exists($core_file)) {
+            error_log('ChronoForge: Core class file not found');
+            return null;
+        }
+        require_once $core_file;
 
         // Check if class exists before instantiating
         if (class_exists('ChronoForge_Core')) {
             return ChronoForge_Core::instance();
         } else {
-            error_log('ChronoForge: Core class not found');
+            error_log('ChronoForge: Core class not found after loading');
             return null;
         }
     } catch (Exception $e) {
         error_log('ChronoForge Initialization Error: ' . $e->getMessage());
+        // Add admin notice for critical errors
+        add_action('admin_notices', 'chrono_forge_critical_error_notice');
+        return null;
+    } catch (Error $e) {
+        error_log('ChronoForge Fatal Error: ' . $e->getMessage());
+        add_action('admin_notices', 'chrono_forge_critical_error_notice');
         return null;
     }
 }
@@ -104,6 +126,30 @@ function chrono_forge() {
         $instance = chrono_forge_init_plugin();
     }
     return $instance;
+}
+
+/**
+ * Critical error notice for admin
+ */
+function chrono_forge_critical_error_notice() {
+    echo '<div class="notice notice-error"><p>';
+    echo '<strong>ChronoForge Plugin Error:</strong> ';
+    echo __('Плагин не может быть загружен из-за критической ошибки. Проверьте логи сервера для получения подробной информации.', 'chrono-forge');
+    echo '</p></div>';
+}
+
+/**
+ * Emergency deactivation function
+ */
+function chrono_forge_emergency_deactivate() {
+    if (function_exists('deactivate_plugins')) {
+        deactivate_plugins(plugin_basename(__FILE__));
+        add_action('admin_notices', function() {
+            echo '<div class="notice notice-warning"><p>';
+            echo __('ChronoForge был автоматически деактивирован из-за критической ошибки.', 'chrono-forge');
+            echo '</p></div>';
+        });
+    }
 }
 
 // Initialize the plugin after WordPress is fully loaded
