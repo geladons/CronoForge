@@ -274,6 +274,9 @@ class ChronoForge_Core {
             } else {
                 chrono_forge_safe_log("Admin menu class file not found", 'warning');
             }
+
+            // Load diagnostics system
+            $this->load_diagnostics_system();
         }
     }
 
@@ -776,5 +779,49 @@ class ChronoForge_Core {
 
         chrono_forge_safe_log("Emergency mode disabled", 'info');
         return true;
+    }
+
+    /**
+     * Load diagnostics system
+     *
+     * @since 1.0.0
+     * @return void
+     */
+    private function load_diagnostics_system() {
+        try {
+            // Load diagnostic utility functions
+            $diagnostic_functions_file = CHRONO_FORGE_PLUGIN_DIR . 'includes/utils/diagnostic-functions.php';
+            if (file_exists($diagnostic_functions_file)) {
+                require_once $diagnostic_functions_file;
+                chrono_forge_safe_log("Loaded diagnostic utility functions", 'debug');
+            }
+
+            // Load diagnostics engine
+            $diagnostics_file = CHRONO_FORGE_PLUGIN_DIR . 'includes/class-chrono-forge-diagnostics.php';
+            if (file_exists($diagnostics_file)) {
+                require_once $diagnostics_file;
+
+                // Initialize diagnostics
+                $this->diagnostics = ChronoForge_Diagnostics::instance();
+                chrono_forge_safe_log("Loaded diagnostics system", 'debug');
+            } else {
+                chrono_forge_safe_log("Diagnostics system file not found", 'warning');
+            }
+
+            // Load admin diagnostics interface
+            $admin_diagnostics_file = CHRONO_FORGE_PLUGIN_DIR . 'admin/class-chrono-forge-admin-diagnostics.php';
+            if (file_exists($admin_diagnostics_file)) {
+                require_once $admin_diagnostics_file;
+
+                // Initialize admin diagnostics
+                $this->admin_diagnostics = ChronoForge_Admin_Diagnostics::instance();
+                chrono_forge_safe_log("Loaded admin diagnostics interface", 'debug');
+            } else {
+                chrono_forge_safe_log("Admin diagnostics interface file not found", 'warning');
+            }
+
+        } catch (Exception $e) {
+            chrono_forge_safe_log("Error loading diagnostics system: " . $e->getMessage(), 'error');
+        }
     }
 }

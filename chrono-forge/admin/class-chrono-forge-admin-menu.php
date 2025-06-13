@@ -121,6 +121,16 @@ class ChronoForge_Admin_Menu {
             'chrono-forge-settings',
             array($this, 'settings_page')
         );
+
+        // Подменю - Диагностика
+        add_submenu_page(
+            'chrono-forge',
+            __('Диагностика', 'chrono-forge'),
+            __('Диагностика', 'chrono-forge'),
+            'manage_options',
+            'chrono-forge-diagnostics',
+            array($this, 'diagnostics_page')
+        );
     }
 
     /**
@@ -641,7 +651,7 @@ class ChronoForge_Admin_Menu {
 
     /**
      * Добавление уведомления в админ-панель
-     * 
+     *
      * @param string $message
      * @param string $type
      */
@@ -649,5 +659,21 @@ class ChronoForge_Admin_Menu {
         add_action('admin_notices', function() use ($message, $type) {
             echo '<div class="notice notice-' . esc_attr($type) . ' is-dismissible"><p>' . esc_html($message) . '</p></div>';
         });
+    }
+
+    /**
+     * Страница диагностики
+     */
+    public function diagnostics_page() {
+        // Load diagnostics classes if not already loaded
+        if (!class_exists('ChronoForge_Diagnostics')) {
+            require_once CHRONO_FORGE_PLUGIN_DIR . 'includes/class-chrono-forge-diagnostics.php';
+        }
+        if (!class_exists('ChronoForge_Admin_Diagnostics')) {
+            require_once CHRONO_FORGE_PLUGIN_DIR . 'admin/class-chrono-forge-admin-diagnostics.php';
+        }
+
+        $admin_diagnostics = ChronoForge_Admin_Diagnostics::instance();
+        $admin_diagnostics->render_diagnostics_page();
     }
 }

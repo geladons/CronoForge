@@ -210,6 +210,7 @@ function chrono_forge_critical_error_notice() {
     echo '<div class="notice notice-error"><p>';
     echo '<strong>ChronoForge Plugin Error:</strong> ';
     echo __('Плагин не может быть загружен из-за критической ошибки. Проверьте логи сервера для получения подробной информации.', 'chrono-forge');
+    echo ' <a href="' . admin_url('admin.php?page=chrono-forge-diagnostics') . '">' . __('Открыть диагностику', 'chrono-forge') . '</a>';
     echo '</p></div>';
 }
 
@@ -220,7 +221,8 @@ function chrono_forge_syntax_error_notice() {
     echo '<div class="notice notice-error"><p>';
     echo '<strong>ChronoForge Syntax Error:</strong> ';
     echo __('Обнаружены синтаксические ошибки в файлах плагина. Проверьте логи сервера для получения подробной информации.', 'chrono-forge');
-    echo ' <a href="' . admin_url('plugins.php') . '">' . __('Деактивировать плагин', 'chrono-forge') . '</a>';
+    echo ' <a href="' . admin_url('admin.php?page=chrono-forge-diagnostics') . '">' . __('Открыть диагностику', 'chrono-forge') . '</a>';
+    echo ' | <a href="' . admin_url('plugins.php') . '">' . __('Деактивировать плагин', 'chrono-forge') . '</a>';
     echo '</p></div>';
 }
 

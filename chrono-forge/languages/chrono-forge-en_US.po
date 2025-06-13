@@ -584,6 +584,88 @@ msgstr "Documentation"
 msgid "Поддержка"
 msgstr "Support"
 
+#: Diagnostics System
+msgid "Диагностика"
+msgstr "Diagnostics"
+
+msgid "ChronoForge Diagnostics"
+msgstr "ChronoForge Diagnostics"
+
+msgid "System Status"
+msgstr "System Status"
+
+msgid "Critical issues detected that require immediate attention."
+msgstr "Critical issues detected that require immediate attention."
+
+msgid "Errors detected that should be addressed."
+msgstr "Errors detected that should be addressed."
+
+msgid "Minor issues detected that should be reviewed."
+msgstr "Minor issues detected that should be reviewed."
+
+msgid "All systems are functioning normally."
+msgstr "All systems are functioning normally."
+
+msgid "Run Diagnostics"
+msgstr "Run Diagnostics"
+
+msgid "Enable Safe Mode"
+msgstr "Enable Safe Mode"
+
+msgid "Disable Safe Mode"
+msgstr "Disable Safe Mode"
+
+msgid "Diagnostic Tests"
+msgstr "Diagnostic Tests"
+
+msgid "PHP Syntax Check"
+msgstr "PHP Syntax Check"
+
+msgid "File Integrity"
+msgstr "File Integrity"
+
+msgid "Database Health"
+msgstr "Database Health"
+
+msgid "WordPress Compatibility"
+msgstr "WordPress Compatibility"
+
+msgid "PHP Requirements"
+msgstr "PHP Requirements"
+
+msgid "File Permissions"
+msgstr "File Permissions"
+
+msgid "Plugin Dependencies"
+msgstr "Plugin Dependencies"
+
+msgid "Configuration"
+msgstr "Configuration"
+
+msgid "Details:"
+msgstr "Details:"
+
+msgid "Suggestions:"
+msgstr "Suggestions:"
+
+msgid "System Information"
+msgstr "System Information"
+
+msgid "Recent Error Logs"
+msgstr "Recent Error Logs"
+
+msgid "Clear Error Log"
+msgstr "Clear Error Log"
+
+msgid "No recent error logs found."
+msgstr "No recent error logs found."
+
+msgid "Last updated: %s"
+msgstr "Last updated: %s"
+
+msgid "Открыть диагностику"
+msgstr "Open Diagnostics"
+
 #: public/views/view-booking-form.php
 msgid "Записаться на услугу"
 msgstr "Book a Service"

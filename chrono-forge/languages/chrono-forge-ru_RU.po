@@ -1,0 +1,420 @@
+# ChronoForge WordPress Plugin - Russian Translation
+# Copyright (C) 2024 ChronoForge Team
+# This file is distributed under the same license as the ChronoForge package.
+msgid ""
+msgstr ""
+"Project-Id-Version: ChronoForge 1.0.0\n"
+"Report-Msgid-Bugs-To: https://chronoforge.com/support\n"
+"POT-Creation-Date: 2024-01-01 12:00+0000\n"
+"PO-Revision-Date: 2024-01-01 12:00+0000\n"
+"Last-Translator: ChronoForge Team <support@chronoforge.com>\n"
+"Language-Team: Russian <ru@li.org>\n"
+"Language: ru_RU\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: WP-CLI 2.8.1\n"
+"X-Domain: chrono-forge\n"
+
+#: Diagnostics System
+msgid "Диагностика"
+msgstr "Диагностика"
+
+msgid "ChronoForge Diagnostics"
+msgstr "Диагностика ChronoForge"
+
+msgid "System Status"
+msgstr "Состояние системы"
+
+msgid "Critical issues detected that require immediate attention."
+msgstr "Обнаружены критические проблемы, требующие немедленного внимания."
+
+msgid "Errors detected that should be addressed."
+msgstr "Обнаружены ошибки, которые следует устранить."
+
+msgid "Minor issues detected that should be reviewed."
+msgstr "Обнаружены незначительные проблемы, которые следует проверить."
+
+msgid "All systems are functioning normally."
+msgstr "Все системы функционируют нормально."
+
+msgid "%d Critical"
+msgstr "%d Критических"
+
+msgid "%d Errors"
+msgstr "%d Ошибок"
+
+msgid "%d Warnings"
+msgstr "%d Предупреждений"
+
+msgid "%d Total Tests"
+msgstr "%d Всего тестов"
+
+msgid "Run Diagnostics"
+msgstr "Запустить диагностику"
+
+msgid "Enable Safe Mode"
+msgstr "Включить безопасный режим"
+
+msgid "Disable Safe Mode"
+msgstr "Отключить безопасный режим"
+
+msgid "Diagnostic Tests"
+msgstr "Диагностические тесты"
+
+msgid "PHP Syntax Check"
+msgstr "Проверка синтаксиса PHP"
+
+msgid "File Integrity"
+msgstr "Целостность файлов"
+
+msgid "Database Health"
+msgstr "Состояние базы данных"
+
+msgid "WordPress Compatibility"
+msgstr "Совместимость с WordPress"
+
+msgid "PHP Requirements"
+msgstr "Требования PHP"
+
+msgid "File Permissions"
+msgstr "Права доступа к файлам"
+
+msgid "Plugin Dependencies"
+msgstr "Зависимости плагина"
+
+msgid "Configuration"
+msgstr "Конфигурация"
+
+msgid "Details:"
+msgstr "Подробности:"
+
+msgid "Suggestions:"
+msgstr "Рекомендации:"
+
+msgid "All PHP files have valid syntax"
+msgstr "Все PHP файлы имеют корректный синтаксис"
+
+msgid "Found %d syntax errors"
+msgstr "Найдено %d синтаксических ошибок"
+
+msgid "File not found: %s"
+msgstr "Файл не найден: %s"
+
+msgid "Syntax error in %s: %s"
+msgstr "Синтаксическая ошибка в %s: %s"
+
+msgid "Review the syntax errors above and fix them."
+msgstr "Просмотрите синтаксические ошибки выше и исправьте их."
+
+msgid "Consider restoring from a backup if available."
+msgstr "Рассмотрите возможность восстановления из резервной копии, если она доступна."
+
+msgid "Contact support for assistance."
+msgstr "Обратитесь в службу поддержки за помощью."
+
+msgid "All required files are present"
+msgstr "Все необходимые файлы присутствуют"
+
+msgid "Missing files: %s"
+msgstr "Отсутствующие файлы: %s"
+
+msgid "Corrupted files: %s"
+msgstr "Поврежденные файлы: %s"
+
+msgid "Reinstall the plugin to restore missing/corrupted files."
+msgstr "Переустановите плагин для восстановления отсутствующих/поврежденных файлов."
+
+msgid "Check file permissions on the plugin directory."
+msgstr "Проверьте права доступа к директории плагина."
+
+msgid "Contact your hosting provider if the issue persists."
+msgstr "Обратитесь к вашему хостинг-провайдеру, если проблема не исчезает."
+
+msgid "Database is healthy"
+msgstr "База данных в порядке"
+
+msgid "Found %d database issues"
+msgstr "Найдено %d проблем с базой данных"
+
+msgid "Missing table: %s"
+msgstr "Отсутствующая таблица: %s"
+
+msgid "Table %s has no columns"
+msgstr "Таблица %s не имеет столбцов"
+
+msgid "Database connection failed"
+msgstr "Не удалось подключиться к базе данных"
+
+msgid "Deactivate and reactivate the plugin to recreate missing tables."
+msgstr "Деактивируйте и повторно активируйте плагин для пересоздания отсутствующих таблиц."
+
+msgid "Check database permissions."
+msgstr "Проверьте права доступа к базе данных."
+
+msgid "Contact your hosting provider if database issues persist."
+msgstr "Обратитесь к вашему хостинг-провайдеру, если проблемы с базой данных не исчезают."
+
+msgid "WordPress compatibility check passed"
+msgstr "Проверка совместимости с WordPress пройдена"
+
+msgid "Found %d WordPress compatibility issues"
+msgstr "Найдено %d проблем совместимости с WordPress"
+
+msgid "WordPress version %s is below minimum required version %s"
+msgstr "Версия WordPress %s ниже минимально требуемой версии %s"
+
+msgid "Required WordPress function missing: %s"
+msgstr "Отсутствует необходимая функция WordPress: %s"
+
+msgid "WordPress debug mode is enabled"
+msgstr "Режим отладки WordPress включен"
+
+msgid "Update WordPress to the latest version."
+msgstr "Обновите WordPress до последней версии."
+
+msgid "Check if WordPress core files are intact."
+msgstr "Проверьте, не повреждены ли основные файлы WordPress."
+
+msgid "Contact support if compatibility issues persist."
+msgstr "Обратитесь в службу поддержки, если проблемы совместимости не исчезают."
+
+msgid "PHP requirements met"
+msgstr "Требования PHP выполнены"
+
+msgid "Found %d PHP requirement issues"
+msgstr "Найдено %d проблем с требованиями PHP"
+
+msgid "PHP version %s is below minimum required version %s"
+msgstr "Версия PHP %s ниже минимально требуемой версии %s"
+
+msgid "Required PHP extension missing: %s"
+msgstr "Отсутствует необходимое расширение PHP: %s"
+
+msgid "PHP memory limit %s is below recommended 128M"
+msgstr "Лимит памяти PHP %s ниже рекомендуемого 128M"
+
+msgid "Contact your hosting provider to update PHP version and install missing extensions."
+msgstr "Обратитесь к вашему хостинг-провайдеру для обновления версии PHP и установки недостающих расширений."
+
+msgid "Increase PHP memory limit to at least 128M."
+msgstr "Увеличьте лимит памяти PHP до минимум 128M."
+
+msgid "File permissions are correct"
+msgstr "Права доступа к файлам корректны"
+
+msgid "Found %d file permission issues"
+msgstr "Найдено %d проблем с правами доступа к файлам"
+
+msgid "Plugin directory is not readable"
+msgstr "Директория плагина недоступна для чтения"
+
+msgid "WordPress uploads directory is not writable"
+msgstr "Директория загрузок WordPress недоступна для записи"
+
+msgid "File not readable: %s"
+msgstr "Файл недоступен для чтения: %s"
+
+msgid "Check file and directory permissions."
+msgstr "Проверьте права доступа к файлам и директориям."
+
+msgid "Contact your hosting provider to fix permission issues."
+msgstr "Обратитесь к вашему хостинг-провайдеру для исправления проблем с правами доступа."
+
+msgid "All plugin dependencies are satisfied"
+msgstr "Все зависимости плагина удовлетворены"
+
+msgid "Found %d dependency issues"
+msgstr "Найдено %d проблем с зависимостями"
+
+msgid "Conflicting plugin detected: %s"
+msgstr "Обнаружен конфликтующий плагин: %s"
+
+msgid "Deactivate conflicting plugins."
+msgstr "Деактивируйте конфликтующие плагины."
+
+msgid "Contact support for compatibility information."
+msgstr "Обратитесь в службу поддержки за информацией о совместимости."
+
+msgid "Plugin configuration is valid"
+msgstr "Конфигурация плагина корректна"
+
+msgid "Found %d configuration issues"
+msgstr "Найдено %d проблем с конфигурацией"
+
+msgid "Plugin activation data not found"
+msgstr "Данные активации плагина не найдены"
+
+msgid "Safe mode is currently enabled"
+msgstr "Безопасный режим в настоящее время включен"
+
+msgid "Error log is large (%s). Consider clearing it."
+msgstr "Журнал ошибок большой (%s). Рассмотрите возможность его очистки."
+
+msgid "Review plugin settings."
+msgstr "Просмотрите настройки плагина."
+
+msgid "Clear error logs if they are too large."
+msgstr "Очистите журналы ошибок, если они слишком большие."
+
+msgid "Reactivate plugin if activation data is missing."
+msgstr "Повторно активируйте плагин, если данные активации отсутствуют."
+
+msgid "System Information"
+msgstr "Информация о системе"
+
+msgid "WordPress"
+msgstr "WordPress"
+
+msgid "Version"
+msgstr "Версия"
+
+msgid "Multisite"
+msgstr "Мультисайт"
+
+msgid "Yes"
+msgstr "Да"
+
+msgid "No"
+msgstr "Нет"
+
+msgid "Debug Mode"
+msgstr "Режим отладки"
+
+msgid "Enabled"
+msgstr "Включен"
+
+msgid "Disabled"
+msgstr "Отключен"
+
+msgid "Active Theme"
+msgstr "Активная тема"
+
+msgid "PHP"
+msgstr "PHP"
+
+msgid "Memory Limit"
+msgstr "Лимит памяти"
+
+msgid "Max Execution Time"
+msgstr "Максимальное время выполнения"
+
+msgid "Upload Max Filesize"
+msgstr "Максимальный размер загружаемого файла"
+
+msgid "Database"
+msgstr "База данных"
+
+msgid "MySQL Version"
+msgstr "Версия MySQL"
+
+msgid "ChronoForge"
+msgstr "ChronoForge"
+
+msgid "Plugin Version"
+msgstr "Версия плагина"
+
+msgid "Safe Mode"
+msgstr "Безопасный режим"
+
+msgid "Recent Error Logs"
+msgstr "Последние журналы ошибок"
+
+msgid "Clear Error Log"
+msgstr "Очистить журнал ошибок"
+
+msgid "Time"
+msgstr "Время"
+
+msgid "Level"
+msgstr "Уровень"
+
+msgid "Message"
+msgstr "Сообщение"
+
+msgid "User"
+msgstr "Пользователь"
+
+msgid "Unknown"
+msgstr "Неизвестно"
+
+msgid "System"
+msgstr "Система"
+
+msgid "Critical"
+msgstr "Критический"
+
+msgid "Error"
+msgstr "Ошибка"
+
+msgid "Warning"
+msgstr "Предупреждение"
+
+msgid "Info"
+msgstr "Информация"
+
+msgid "Debug"
+msgstr "Отладка"
+
+msgid "No recent error logs found."
+msgstr "Последние журналы ошибок не найдены."
+
+msgid "Last updated: %s"
+msgstr "Последнее обновление: %s"
+
+msgid "Открыть диагностику"
+msgstr "Открыть диагностику"
+
+msgid "Running diagnostics..."
+msgstr "Выполнение диагностики..."
+
+msgid "Diagnostics complete"
+msgstr "Диагностика завершена"
+
+msgid "Clearing error log..."
+msgstr "Очистка журнала ошибок..."
+
+msgid "Error log cleared"
+msgstr "Журнал ошибок очищен"
+
+msgid "Toggling safe mode..."
+msgstr "Переключение безопасного режима..."
+
+msgid "Safe mode toggled"
+msgstr "Безопасный режим переключен"
+
+msgid "Are you sure you want to clear the error log?"
+msgstr "Вы уверены, что хотите очистить журнал ошибок?"
+
+msgid "Are you sure you want to toggle safe mode?"
+msgstr "Вы уверены, что хотите переключить безопасный режим?"
+
+msgid "ChronoForge Critical Issues Detected"
+msgstr "Обнаружены критические проблемы ChronoForge"
+
+msgid "Found %d critical issue that needs immediate attention."
+msgid_plural "Found %d critical issues that need immediate attention."
+msgstr[0] "Найдена %d критическая проблема, требующая немедленного внимания."
+msgstr[1] "Найдено %d критические проблемы, требующие немедленного внимания."
+msgstr[2] "Найдено %d критических проблем, требующих немедленного внимания."
+
+msgid "View Diagnostics"
+msgstr "Просмотреть диагностику"
+
+msgid "ChronoForge Issues Detected"
+msgstr "Обнаружены проблемы ChronoForge"
+
+msgid "Found %d error that should be addressed."
+msgid_plural "Found %d errors that should be addressed."
+msgstr[0] "Найдена %d ошибка, которую следует устранить."
+msgstr[1] "Найдено %d ошибки, которые следует устранить."
+msgstr[2] "Найдено %d ошибок, которые следует устранить."
+
+msgid "ChronoForge Safe Mode Active"
+msgstr "Активен безопасный режим ChronoForge"
+
+msgid "The plugin is running in safe mode. Some features may be disabled."
+msgstr "Плагин работает в безопасном режиме. Некоторые функции могут быть отключены."
+
+msgid "Manage Safe Mode"
+msgstr "Управление безопасным режимом"
