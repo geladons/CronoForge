@@ -172,21 +172,51 @@ class ChronoForge_Activator {
             KEY service_id (service_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
 
-        // Выполнение SQL-запросов для создания таблиц
-        dbDelta($categories_sql);
-        dbDelta($services_sql);
-        dbDelta($employees_sql);
-        dbDelta($schedules_sql);
-        dbDelta($appointments_sql);
-        dbDelta($customers_sql);
-        dbDelta($payments_sql);
-        dbDelta($employee_services_sql);
+        // Выполнение SQL-запросов для создания таблиц с улучшенной обработкой ошибок
+        try {
+            $tables_created = array();
 
-        // Сохранение версии плагина в опциях WordPress
-        add_option('chrono_forge_version', CHRONO_FORGE_VERSION);
+            $tables = array(
+                'categories' => $categories_sql,
+                'services' => $services_sql,
+                'employees' => $employees_sql,
+                'schedules' => $schedules_sql,
+                'appointments' => $appointments_sql,
+                'customers' => $customers_sql,
+                'payments' => $payments_sql,
+                'employee_services' => $employee_services_sql
+            );
 
-        // Создание базовых настроек плагина
-        self::create_default_options();
+            foreach ($tables as $table_name => $sql) {
+                $result = dbDelta($sql);
+                if (!empty($wpdb->last_error)) {
+                    error_log("ChronoForge: Error creating table {$table_name}: " . $wpdb->last_error);
+                } else {
+                    $tables_created[] = $table_name;
+                    error_log("ChronoForge: Successfully created/updated table {$table_name}");
+                }
+            }
+
+            // Создание дополнительных индексов для производительности
+            self::create_performance_indexes();
+
+            // Сохранение версии плагина в опциях WordPress
+            add_option('chrono_forge_version', CHRONO_FORGE_VERSION);
+            add_option('chrono_forge_tables_created', $tables_created);
+            add_option('chrono_forge_activation_date', current_time('mysql'));
+
+            // Создание базовых настроек плагина
+            self::create_default_options();
+
+            // Создание базовых данных
+            self::create_sample_data();
+
+            error_log("ChronoForge: Plugin activation completed successfully");
+
+        } catch (Exception $e) {
+            error_log("ChronoForge: Activation error: " . $e->getMessage());
+            // Не прерываем активацию, но логируем ошибку
+        }
     }
 
     /**
@@ -214,5 +244,114 @@ class ChronoForge_Activator {
         );
 
         add_option('chrono_forge_settings', $default_options);
+    }
+
+    /**
+     * Создание дополнительных индексов для производительности
+     *
+     * @since 1.0.0
+     * @return void
+     */
+    private static function create_performance_indexes() {
+        global $wpdb;
+
+        $table_prefix = $wpdb->prefix . 'chrono_forge_';
+
+        // Индексы для таблицы записей (appointments)
+        $indexes = array(
+            "CREATE INDEX IF NOT EXISTS idx_appointment_date ON {$table_prefix}appointments (appointment_date)",
+            "CREATE INDEX IF NOT EXISTS idx_appointment_employee_date ON {$table_prefix}appointments (employee_id, appointment_date)",
+            "CREATE INDEX IF NOT EXISTS idx_appointment_status ON {$table_prefix}appointments (status)",
+            "CREATE INDEX IF NOT EXISTS idx_appointment_customer ON {$table_prefix}appointments (customer_id)",
+            "CREATE INDEX IF NOT EXISTS idx_appointment_service ON {$table_prefix}appointments (service_id)",
+
+            // Индексы для таблицы клиентов
+            "CREATE INDEX IF NOT EXISTS idx_customer_email ON {$table_prefix}customers (email)",
+            "CREATE INDEX IF NOT EXISTS idx_customer_phone ON {$table_prefix}customers (phone)",
+            "CREATE INDEX IF NOT EXISTS idx_customer_name ON {$table_prefix}customers (first_name, last_name)",
+
+            // Индексы для таблицы платежей
+            "CREATE INDEX IF NOT EXISTS idx_payment_appointment ON {$table_prefix}payments (appointment_id)",
+            "CREATE INDEX IF NOT EXISTS idx_payment_status ON {$table_prefix}payments (status)",
+            "CREATE INDEX IF NOT EXISTS idx_payment_created ON {$table_prefix}payments (created_at)",
+
+            // Индексы для таблицы услуг
+            "CREATE INDEX IF NOT EXISTS idx_service_category ON {$table_prefix}services (category_id)",
+            "CREATE INDEX IF NOT EXISTS idx_service_status ON {$table_prefix}services (status)",
+
+            // Индексы для таблицы сотрудников
+            "CREATE INDEX IF NOT EXISTS idx_employee_status ON {$table_prefix}employees (status)",
+            "CREATE INDEX IF NOT EXISTS idx_employee_wp_user ON {$table_prefix}employees (wp_user_id)",
+
+            // Индексы для таблицы графиков
+            "CREATE INDEX IF NOT EXISTS idx_schedule_employee_day ON {$table_prefix}schedules (employee_id, day_of_week)",
+        );
+
+        foreach ($indexes as $index_sql) {
+            $wpdb->query($index_sql);
+            if (!empty($wpdb->last_error)) {
+                error_log("ChronoForge: Error creating index: " . $wpdb->last_error);
+            }
+        }
+    }
+
+    /**
+     * Создание примерных данных для демонстрации
+     *
+     * @since 1.0.0
+     * @return void
+     */
+    private static function create_sample_data() {
+        global $wpdb;
+
+        $table_prefix = $wpdb->prefix . 'chrono_forge_';
+
+        // Проверяем, есть ли уже данные
+        $existing_categories = $wpdb->get_var("SELECT COUNT(*) FROM {$table_prefix}categories");
+        if ($existing_categories > 0) {
+            return; // Данные уже есть
+        }
+
+        try {
+            // Создаем примерные категории
+            $categories = array(
+                array('name' => __('Красота и здоровье', 'chrono-forge'), 'description' => __('Услуги красоты и здоровья', 'chrono-forge'), 'color' => '#e74c3c'),
+                array('name' => __('Консультации', 'chrono-forge'), 'description' => __('Консультационные услуги', 'chrono-forge'), 'color' => '#3498db'),
+                array('name' => __('Обучение', 'chrono-forge'), 'description' => __('Образовательные услуги', 'chrono-forge'), 'color' => '#2ecc71'),
+            );
+
+            foreach ($categories as $category) {
+                $wpdb->insert($table_prefix . 'categories', $category);
+            }
+
+            // Создаем примерные услуги
+            $services = array(
+                array(
+                    'name' => __('Стрижка', 'chrono-forge'),
+                    'description' => __('Профессиональная стрижка волос', 'chrono-forge'),
+                    'category_id' => 1,
+                    'duration' => 60,
+                    'price' => 50.00,
+                    'color' => '#e74c3c'
+                ),
+                array(
+                    'name' => __('Консультация специалиста', 'chrono-forge'),
+                    'description' => __('Индивидуальная консультация', 'chrono-forge'),
+                    'category_id' => 2,
+                    'duration' => 30,
+                    'price' => 100.00,
+                    'color' => '#3498db'
+                ),
+            );
+
+            foreach ($services as $service) {
+                $wpdb->insert($table_prefix . 'services', $service);
+            }
+
+            error_log("ChronoForge: Sample data created successfully");
+
+        } catch (Exception $e) {
+            error_log("ChronoForge: Error creating sample data: " . $e->getMessage());
+        }
     }
 }

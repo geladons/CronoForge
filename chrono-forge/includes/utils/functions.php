@@ -183,15 +183,150 @@ function chrono_forge_get_max_booking_date() {
 }
 
 /**
- * Логирование ошибок плагина
- * 
- * @param string $message
- * @param string $level
+ * Улучшенное логирование ошибок плагина
+ *
+ * @since 1.0.0
+ * @param string $message Сообщение для логирования
+ * @param string $level Уровень логирования (error, warning, info, debug)
+ * @param array $context Дополнительный контекст
+ * @return void
  */
-function chrono_forge_log($message, $level = 'info') {
-    if (defined('WP_DEBUG') && WP_DEBUG) {
-        error_log("[ChronoForge {$level}] " . $message);
+function chrono_forge_log($message, $level = 'info', $context = array()) {
+    // Проверяем, включено ли логирование
+    if (!defined('WP_DEBUG') || !WP_DEBUG) {
+        return;
     }
+
+    // Валидация уровня логирования
+    $valid_levels = array('error', 'warning', 'info', 'debug');
+    if (!in_array($level, $valid_levels)) {
+        $level = 'info';
+    }
+
+    // Форматируем сообщение
+    $timestamp = current_time('Y-m-d H:i:s');
+    $formatted_message = "[{$timestamp}] [ChronoForge {$level}] {$message}";
+
+    // Добавляем контекст если есть
+    if (!empty($context)) {
+        $formatted_message .= ' Context: ' . wp_json_encode($context);
+    }
+
+    // Добавляем информацию о пользователе если доступна
+    if (is_user_logged_in()) {
+        $user = wp_get_current_user();
+        $formatted_message .= " User: {$user->user_login} (ID: {$user->ID})";
+    }
+
+    // Добавляем IP адрес
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $formatted_message .= " IP: {$ip}";
+
+    // Логируем в файл WordPress
+    error_log($formatted_message);
+
+    // Для критических ошибок также сохраняем в базу данных
+    if ($level === 'error') {
+        chrono_forge_save_error_to_db($message, $context);
+    }
+
+    // Отправляем уведомление администратору при критических ошибках
+    if ($level === 'error' && chrono_forge_get_setting('notify_admin_on_errors', false)) {
+        chrono_forge_notify_admin_error($message, $context);
+    }
+}
+
+/**
+ * Сохранить критическую ошибку в базу данных
+ *
+ * @since 1.0.0
+ * @param string $message Сообщение об ошибке
+ * @param array $context Контекст ошибки
+ * @return void
+ */
+function chrono_forge_save_error_to_db($message, $context = array()) {
+    global $wpdb;
+
+    try {
+        $table_name = $wpdb->prefix . 'chrono_forge_error_log';
+
+        // Создаем таблицу если не существует
+        $charset_collate = $wpdb->get_charset_collate();
+        $sql = "CREATE TABLE IF NOT EXISTS {$table_name} (
+            id int(11) NOT NULL AUTO_INCREMENT,
+            message text NOT NULL,
+            context longtext,
+            user_id int(11),
+            ip_address varchar(45),
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY created_at (created_at)
+        ) {$charset_collate};";
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql);
+
+        // Вставляем запись об ошибке
+        $wpdb->insert(
+            $table_name,
+            array(
+                'message' => $message,
+                'context' => wp_json_encode($context),
+                'user_id' => get_current_user_id(),
+                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '',
+                'created_at' => current_time('mysql')
+            ),
+            array('%s', '%s', '%d', '%s', '%s')
+        );
+
+        // Очищаем старые записи (старше 30 дней)
+        $wpdb->query($wpdb->prepare(
+            "DELETE FROM {$table_name} WHERE created_at < %s",
+            date('Y-m-d H:i:s', strtotime('-30 days'))
+        ));
+
+    } catch (Exception $e) {
+        // Если не можем записать в БД, логируем в файл
+        error_log("[ChronoForge] Failed to save error to database: " . $e->getMessage());
+    }
+}
+
+/**
+ * Уведомить администратора о критической ошибке
+ *
+ * @since 1.0.0
+ * @param string $message Сообщение об ошибке
+ * @param array $context Контекст ошибки
+ * @return void
+ */
+function chrono_forge_notify_admin_error($message, $context = array()) {
+    // Проверяем, не отправляли ли уже уведомление недавно
+    $transient_key = 'chrono_forge_error_notification_' . md5($message);
+    if (get_transient($transient_key)) {
+        return; // Уже отправляли уведомление в последний час
+    }
+
+    $admin_email = get_option('admin_email');
+    if (!$admin_email) {
+        return;
+    }
+
+    $subject = __('ChronoForge: Критическая ошибка на сайте', 'chrono-forge') . ' ' . get_bloginfo('name');
+
+    $body = __('На вашем сайте произошла критическая ошибка в плагине ChronoForge:', 'chrono-forge') . "\n\n";
+    $body .= __('Сообщение об ошибке:', 'chrono-forge') . " {$message}\n\n";
+
+    if (!empty($context)) {
+        $body .= __('Дополнительная информация:', 'chrono-forge') . "\n" . print_r($context, true) . "\n\n";
+    }
+
+    $body .= __('Время:', 'chrono-forge') . ' ' . current_time('Y-m-d H:i:s') . "\n";
+    $body .= __('URL:', 'chrono-forge') . ' ' . home_url() . "\n";
+
+    wp_mail($admin_email, $subject, $body);
+
+    // Устанавливаем транзиент на 1 час, чтобы не спамить
+    set_transient($transient_key, true, HOUR_IN_SECONDS);
 }
 
 /**
@@ -320,7 +455,7 @@ function chrono_forge_time_to_minutes($time) {
 
 /**
  * Конвертация минут во время
- * 
+ *
  * @param int $minutes Минуты с начала дня
  * @return string Время в формате H:i
  */
@@ -328,4 +463,188 @@ function chrono_forge_minutes_to_time($minutes) {
     $hours = floor($minutes / 60);
     $mins = $minutes % 60;
     return sprintf('%02d:%02d', $hours, $mins);
+}
+
+/**
+ * Безопасное выполнение операции с повторными попытками
+ *
+ * @since 1.0.0
+ * @param callable $callback Функция для выполнения
+ * @param int $max_attempts Максимальное количество попыток
+ * @param int $delay Задержка между попытками в секундах
+ * @return mixed Результат выполнения функции или false при неудаче
+ */
+function chrono_forge_retry_operation($callback, $max_attempts = 3, $delay = 1) {
+    $attempts = 0;
+
+    while ($attempts < $max_attempts) {
+        try {
+            $result = call_user_func($callback);
+            if ($result !== false) {
+                return $result;
+            }
+        } catch (Exception $e) {
+            chrono_forge_log("Attempt " . ($attempts + 1) . " failed: " . $e->getMessage(), 'warning');
+        }
+
+        $attempts++;
+        if ($attempts < $max_attempts) {
+            sleep($delay);
+        }
+    }
+
+    chrono_forge_log("Operation failed after {$max_attempts} attempts", 'error');
+    return false;
+}
+
+/**
+ * Валидация и санитизация пользовательского ввода
+ *
+ * @since 1.0.0
+ * @param mixed $input Входные данные
+ * @param string $type Тип валидации (email, phone, date, time, int, string)
+ * @param array $options Дополнительные опции валидации
+ * @return mixed Санитизированные данные или false при ошибке
+ */
+function chrono_forge_validate_input($input, $type, $options = array()) {
+    if ($input === null || $input === '') {
+        return isset($options['allow_empty']) && $options['allow_empty'] ? '' : false;
+    }
+
+    switch ($type) {
+        case 'email':
+            $sanitized = sanitize_email($input);
+            return is_email($sanitized) ? $sanitized : false;
+
+        case 'phone':
+            $sanitized = preg_replace('/[^0-9+\-\(\)\s]/', '', $input);
+            $min_length = isset($options['min_length']) ? $options['min_length'] : 10;
+            return strlen($sanitized) >= $min_length ? $sanitized : false;
+
+        case 'date':
+            $sanitized = sanitize_text_field($input);
+            $d = DateTime::createFromFormat('Y-m-d', $sanitized);
+            return ($d && $d->format('Y-m-d') === $sanitized) ? $sanitized : false;
+
+        case 'time':
+            $sanitized = sanitize_text_field($input);
+            $t = DateTime::createFromFormat('H:i:s', $sanitized);
+            if (!$t) {
+                $t = DateTime::createFromFormat('H:i', $sanitized);
+                if ($t) {
+                    $sanitized = $t->format('H:i:s');
+                }
+            }
+            return $t ? $sanitized : false;
+
+        case 'int':
+            $sanitized = intval($input);
+            $min = isset($options['min']) ? $options['min'] : 0;
+            $max = isset($options['max']) ? $options['max'] : PHP_INT_MAX;
+            return ($sanitized >= $min && $sanitized <= $max) ? $sanitized : false;
+
+        case 'string':
+            $sanitized = sanitize_text_field($input);
+            $max_length = isset($options['max_length']) ? $options['max_length'] : 255;
+            return strlen($sanitized) <= $max_length ? $sanitized : false;
+
+        case 'textarea':
+            $sanitized = sanitize_textarea_field($input);
+            $max_length = isset($options['max_length']) ? $options['max_length'] : 1000;
+            return strlen($sanitized) <= $max_length ? $sanitized : false;
+
+        default:
+            return sanitize_text_field($input);
+    }
+}
+
+/**
+ * Получить информацию о производительности системы
+ *
+ * @since 1.0.0
+ * @return array Информация о производительности
+ */
+function chrono_forge_get_performance_info() {
+    return array(
+        'memory_usage' => memory_get_usage(true),
+        'memory_peak' => memory_get_peak_usage(true),
+        'memory_limit' => ini_get('memory_limit'),
+        'execution_time' => microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'],
+        'db_queries' => get_num_queries(),
+        'cache_hits' => wp_cache_get_stats(),
+    );
+}
+
+/**
+ * Проверка лимитов системы
+ *
+ * @since 1.0.0
+ * @return array Результаты проверки
+ */
+function chrono_forge_check_system_limits() {
+    $checks = array();
+
+    // Проверка памяти
+    $memory_usage = memory_get_usage(true);
+    $memory_limit = wp_convert_hr_to_bytes(ini_get('memory_limit'));
+    $memory_percent = ($memory_usage / $memory_limit) * 100;
+
+    $checks['memory'] = array(
+        'status' => $memory_percent < 80 ? 'ok' : ($memory_percent < 95 ? 'warning' : 'critical'),
+        'usage' => $memory_usage,
+        'limit' => $memory_limit,
+        'percent' => $memory_percent
+    );
+
+    // Проверка времени выполнения
+    $max_execution_time = ini_get('max_execution_time');
+    $current_time = microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'];
+    $time_percent = $max_execution_time > 0 ? ($current_time / $max_execution_time) * 100 : 0;
+
+    $checks['execution_time'] = array(
+        'status' => $time_percent < 70 ? 'ok' : ($time_percent < 90 ? 'warning' : 'critical'),
+        'current' => $current_time,
+        'limit' => $max_execution_time,
+        'percent' => $time_percent
+    );
+
+    // Проверка количества запросов к БД
+    $db_queries = get_num_queries();
+    $checks['db_queries'] = array(
+        'status' => $db_queries < 50 ? 'ok' : ($db_queries < 100 ? 'warning' : 'critical'),
+        'count' => $db_queries
+    );
+
+    return $checks;
+}
+
+/**
+ * Очистка всех кэшей плагина
+ *
+ * @since 1.0.0
+ * @return bool Успешность операции
+ */
+function chrono_forge_clear_all_caches() {
+    try {
+        // Очищаем WordPress кэш
+        wp_cache_flush();
+
+        // Очищаем транзиенты плагина
+        global $wpdb;
+        $wpdb->query(
+            "DELETE FROM {$wpdb->options}
+             WHERE option_name LIKE '_transient_chrono_forge_%'
+             OR option_name LIKE '_transient_timeout_chrono_forge_%'"
+        );
+
+        // Очищаем кэш объектов
+        wp_cache_delete_group('chrono_forge');
+
+        chrono_forge_log('All caches cleared successfully', 'info');
+        return true;
+
+    } catch (Exception $e) {
+        chrono_forge_log('Failed to clear caches: ' . $e->getMessage(), 'error');
+        return false;
+    }
 }

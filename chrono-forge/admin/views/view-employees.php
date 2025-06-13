@@ -109,8 +109,8 @@ $weekdays = chrono_forge_get_weekdays();
                            data-id="<?php echo esc_attr($employee->id); ?>" data-type="employee">
                             <?php _e('График', 'chrono-forge'); ?>
                         </a>
-                        <a href="<?php echo wp_nonce_url(add_query_arg(['action' => 'delete_employee', 'id' => $employee->id]), 'delete_employee'); ?>" 
-                           class="cf-btn cf-btn-danger cf-delete-item" 
+                        <a href="<?php echo wp_nonce_url(add_query_arg(['action' => 'delete_employee', 'id' => $employee->id]), 'delete_employee_' . $employee->id); ?>"
+                           class="cf-btn cf-btn-danger cf-delete-item"
                            data-name="<?php echo esc_attr($employee->name); ?>">
                             <?php _e('Удалить', 'chrono-forge'); ?>
                         </a>
@@ -144,18 +144,18 @@ $weekdays = chrono_forge_get_weekdays();
     </div>
 </div>
 
-<!-- Модальное окно нового/редактирования сотрудника -->
+<!-- Модальное окно нового сотрудника -->
 <div id="cf-new-employee-modal" class="cf-modal" style="display: none;">
     <div class="cf-modal-content">
         <div class="cf-modal-header">
             <h3 class="cf-modal-title"><?php _e('Новый сотрудник', 'chrono-forge'); ?></h3>
             <button type="button" class="cf-modal-close">&times;</button>
         </div>
-        
+
         <form class="cf-admin-form" method="post" action="">
             <?php wp_nonce_field('chrono_forge_admin_action'); ?>
             <input type="hidden" name="action" value="save_employee">
-            
+
             <div class="cf-form-row">
                 <div class="cf-form-group">
                     <label for="employee_name"><?php _e('Имя', 'chrono-forge'); ?> *</label>
@@ -209,6 +209,78 @@ $weekdays = chrono_forge_get_weekdays();
                 </button>
                 <button type="submit" class="cf-btn cf-btn-primary">
                     <?php _e('Сохранить', 'chrono-forge'); ?>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Модальное окно редактирования сотрудника -->
+<div id="cf-edit-employee-modal" class="cf-modal" style="display: none;">
+    <div class="cf-modal-content">
+        <div class="cf-modal-header">
+            <h3 class="cf-modal-title"><?php _e('Редактировать сотрудника', 'chrono-forge'); ?></h3>
+            <button type="button" class="cf-modal-close">&times;</button>
+        </div>
+
+        <form class="cf-admin-form" method="post" action="">
+            <?php wp_nonce_field('chrono_forge_admin_action'); ?>
+            <input type="hidden" name="action" value="save_employee">
+            <input type="hidden" name="employee_id" id="edit_employee_id">
+
+            <div class="cf-form-row">
+                <div class="cf-form-group">
+                    <label for="edit_employee_name"><?php _e('Имя', 'chrono-forge'); ?> *</label>
+                    <input type="text" id="edit_employee_name" name="name" required>
+                </div>
+                <div class="cf-form-group">
+                    <label for="edit_employee_email"><?php _e('Email', 'chrono-forge'); ?> *</label>
+                    <input type="email" id="edit_employee_email" name="email" required>
+                </div>
+            </div>
+
+            <div class="cf-form-row">
+                <div class="cf-form-group">
+                    <label for="edit_employee_phone"><?php _e('Телефон', 'chrono-forge'); ?></label>
+                    <input type="tel" id="edit_employee_phone" name="phone">
+                </div>
+                <div class="cf-form-group">
+                    <label for="edit_employee_color"><?php _e('Цвет', 'chrono-forge'); ?></label>
+                    <input type="color" id="edit_employee_color" name="color" value="#e74c3c" class="cf-color-picker">
+                </div>
+            </div>
+
+            <div class="cf-form-group">
+                <label for="edit_employee_description"><?php _e('Описание', 'chrono-forge'); ?></label>
+                <textarea id="edit_employee_description" name="description" rows="3"></textarea>
+            </div>
+
+            <div class="cf-form-group">
+                <label for="edit_employee_services"><?php _e('Услуги', 'chrono-forge'); ?></label>
+                <div style="max-height: 150px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                    <?php foreach ($services as $service): ?>
+                    <label style="display: block; margin-bottom: 5px;">
+                        <input type="checkbox" name="service_ids[]" value="<?php echo esc_attr($service->id); ?>" class="edit-service-checkbox">
+                        <?php echo esc_html($service->name); ?>
+                    </label>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="cf-form-group">
+                <label for="edit_employee_status"><?php _e('Статус', 'chrono-forge'); ?></label>
+                <select id="edit_employee_status" name="status">
+                    <option value="active"><?php _e('Активен', 'chrono-forge'); ?></option>
+                    <option value="inactive"><?php _e('Неактивен', 'chrono-forge'); ?></option>
+                </select>
+            </div>
+
+            <div class="cf-modal-footer">
+                <button type="button" class="cf-btn cf-btn-secondary cf-modal-close">
+                    <?php _e('Отмена', 'chrono-forge'); ?>
+                </button>
+                <button type="submit" class="cf-btn cf-btn-primary">
+                    <?php _e('Сохранить изменения', 'chrono-forge'); ?>
                 </button>
             </div>
         </form>
@@ -296,3 +368,166 @@ $weekdays = chrono_forge_get_weekdays();
         </form>
     </div>
 </div>
+
+<script>
+jQuery(document).ready(function($) {
+    // Handle employee editing
+    $('[data-modal="cf-edit-employee-modal"]').on('click', function(e) {
+        e.preventDefault();
+        const employeeId = $(this).data('id');
+
+        // Load employee data via AJAX
+        $.ajax({
+            url: chronoForgeAdmin.ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'chrono_forge_get_employee',
+                employee_id: employeeId,
+                nonce: chronoForgeAdmin.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    const employee = response.data.employee;
+                    const services = response.data.services;
+
+                    // Populate form fields
+                    $('#edit_employee_id').val(employee.id);
+                    $('#edit_employee_name').val(employee.name);
+                    $('#edit_employee_email').val(employee.email);
+                    $('#edit_employee_phone').val(employee.phone);
+                    $('#edit_employee_color').val(employee.color);
+                    $('#edit_employee_description').val(employee.description);
+                    $('#edit_employee_status').val(employee.status);
+
+                    // Clear and set service checkboxes
+                    $('.edit-service-checkbox').prop('checked', false);
+                    services.forEach(function(serviceId) {
+                        $('.edit-service-checkbox[value="' + serviceId + '"]').prop('checked', true);
+                    });
+
+                    // Show modal
+                    $('#cf-edit-employee-modal').show();
+                } else {
+                    alert('Ошибка загрузки данных сотрудника');
+                }
+            },
+            error: function() {
+                alert('Ошибка загрузки данных сотрудника');
+            }
+        });
+    });
+
+    // Handle schedule editing
+    $('[data-modal="cf-schedule-modal"]').on('click', function(e) {
+        e.preventDefault();
+        const employeeId = $(this).data('id');
+
+        // Set employee ID
+        $('#schedule_employee_id').val(employeeId);
+
+        // Load schedule data via AJAX
+        $.ajax({
+            url: chronoForgeAdmin.ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'chrono_forge_get_employee_schedule',
+                employee_id: employeeId,
+                nonce: chronoForgeAdmin.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    const schedule = response.data;
+
+                    // Clear all schedule inputs
+                    $('.cf-schedule-working').prop('checked', false);
+                    $('.cf-schedule-times input').prop('disabled', true).val('');
+
+                    // Populate schedule data
+                    schedule.forEach(function(day) {
+                        const dayContainer = $('.cf-schedule-day[data-day="' + day.day_of_week + '"]');
+                        const checkbox = dayContainer.find('.cf-schedule-working');
+
+                        checkbox.prop('checked', true);
+                        dayContainer.find('input[name*="[start_time]"]').val(day.start_time).prop('disabled', false);
+                        dayContainer.find('input[name*="[end_time]"]').val(day.end_time).prop('disabled', false);
+
+                        if (day.break_start) {
+                            dayContainer.find('input[name*="[break_start]"]').val(day.break_start).prop('disabled', false);
+                        }
+                        if (day.break_end) {
+                            dayContainer.find('input[name*="[break_end]"]').val(day.break_end).prop('disabled', false);
+                        }
+                    });
+
+                    // Show modal
+                    $('#cf-schedule-modal').show();
+                } else {
+                    // Show modal with empty schedule
+                    $('#cf-schedule-modal').show();
+                }
+            },
+            error: function() {
+                // Show modal with empty schedule
+                $('#cf-schedule-modal').show();
+            }
+        });
+    });
+
+    // Handle schedule working day checkboxes
+    $(document).on('change', '.cf-schedule-working', function() {
+        const dayContainer = $(this).closest('.cf-schedule-day');
+        const timeInputs = dayContainer.find('.cf-schedule-times input');
+
+        if ($(this).is(':checked')) {
+            timeInputs.prop('disabled', false);
+            // Set default values if empty
+            const startTime = dayContainer.find('input[name*="[start_time]"]');
+            const endTime = dayContainer.find('input[name*="[end_time]"]');
+            if (!startTime.val()) startTime.val('09:00');
+            if (!endTime.val()) endTime.val('18:00');
+        } else {
+            timeInputs.prop('disabled', true);
+        }
+    });
+
+    // Handle schedule presets
+    $(document).on('click', '.cf-schedule-preset', function(e) {
+        e.preventDefault();
+        const preset = $(this).data('preset');
+        const startTime = $(this).data('start');
+        const endTime = $(this).data('end');
+        const breakStart = $(this).data('break-start');
+        const breakEnd = $(this).data('break-end');
+
+        // Clear all first
+        $('.cf-schedule-working').prop('checked', false);
+        $('.cf-schedule-times input').prop('disabled', true).val('');
+
+        // Apply preset
+        let daysToSet = [];
+        if (preset === 'weekdays') {
+            daysToSet = [1, 2, 3, 4, 5]; // Monday to Friday
+        } else if (preset === 'all') {
+            daysToSet = [0, 1, 2, 3, 4, 5, 6]; // All days
+        } else if (preset === 'weekend') {
+            daysToSet = [0, 6]; // Sunday and Saturday
+        }
+
+        daysToSet.forEach(function(day) {
+            const dayContainer = $('.cf-schedule-day[data-day="' + day + '"]');
+            const checkbox = dayContainer.find('.cf-schedule-working');
+
+            checkbox.prop('checked', true);
+            dayContainer.find('input[name*="[start_time]"]').val(startTime).prop('disabled', false);
+            dayContainer.find('input[name*="[end_time]"]').val(endTime).prop('disabled', false);
+
+            if (breakStart) {
+                dayContainer.find('input[name*="[break_start]"]').val(breakStart).prop('disabled', false);
+            }
+            if (breakEnd) {
+                dayContainer.find('input[name*="[break_end]"]').val(breakEnd).prop('disabled', false);
+            }
+        });
+    });
+});
+</script>

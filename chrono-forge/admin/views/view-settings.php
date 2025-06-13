@@ -9,6 +9,19 @@
 if (!defined('ABSPATH')) {
     exit;
 }
+
+/**
+ * Helper function to create help tooltip
+ */
+function cf_help_tooltip($text) {
+    return sprintf(
+        '<div class="cf-tooltip">
+            <span class="cf-help-icon">?</span>
+            <div class="cf-tooltip-content">%s</div>
+        </div>',
+        esc_html($text)
+    );
+}
 ?>
 
 <div class="chrono-forge-admin">
@@ -26,7 +39,10 @@ if (!defined('ABSPATH')) {
             
             <div class="cf-form-row">
                 <div class="cf-form-group">
-                    <label for="plugin_language"><?php _e('Язык плагина', 'chrono-forge'); ?></label>
+                    <div class="cf-label-with-help">
+                        <label for="plugin_language"><?php _e('Язык плагина', 'chrono-forge'); ?></label>
+                        <?php echo cf_help_tooltip(__('Выберите язык интерфейса плагина. При выборе "Автоматически" будет использоваться язык WordPress.', 'chrono-forge')); ?>
+                    </div>
                     <select id="plugin_language" name="plugin_language">
                         <option value="auto" <?php selected($settings['plugin_language'] ?? 'auto', 'auto'); ?>>
                             <?php _e('Автоматически (язык WordPress)', 'chrono-forge'); ?>
@@ -80,14 +96,20 @@ if (!defined('ABSPATH')) {
             
             <div class="cf-form-row">
                 <div class="cf-form-group">
-                    <label for="min_booking_time"><?php _e('Минимальное время до записи (минут)', 'chrono-forge'); ?></label>
-                    <input type="number" id="min_booking_time" name="min_booking_time" 
+                    <div class="cf-label-with-help">
+                        <label for="min_booking_time"><?php _e('Минимальное время до записи (минут)', 'chrono-forge'); ?></label>
+                        <?php echo cf_help_tooltip(__('Минимальное количество минут до текущего времени, когда клиенты могут записаться. Например, если установлено 60 минут, клиенты не смогут записаться на время менее чем через час.', 'chrono-forge')); ?>
+                    </div>
+                    <input type="number" id="min_booking_time" name="min_booking_time"
                            value="<?php echo esc_attr($settings['min_booking_time'] ?? 60); ?>" min="0">
                     <small><?php _e('За сколько минут до текущего времени можно записаться', 'chrono-forge'); ?></small>
                 </div>
                 <div class="cf-form-group">
-                    <label for="max_booking_time"><?php _e('Максимальное время для записи (дней)', 'chrono-forge'); ?></label>
-                    <input type="number" id="max_booking_time" name="max_booking_time" 
+                    <div class="cf-label-with-help">
+                        <label for="max_booking_time"><?php _e('Максимальное время для записи (дней)', 'chrono-forge'); ?></label>
+                        <?php echo cf_help_tooltip(__('Максимальное количество дней вперед, на которые клиенты могут записаться. Помогает контролировать планирование и избежать записей на слишком отдаленные даты.', 'chrono-forge')); ?>
+                    </div>
+                    <input type="number" id="max_booking_time" name="max_booking_time"
                            value="<?php echo esc_attr($settings['max_booking_time'] ?? 30); ?>" min="1">
                     <small><?php _e('На сколько дней вперед можно записаться', 'chrono-forge'); ?></small>
                 </div>
@@ -155,12 +177,18 @@ if (!defined('ABSPATH')) {
                     <h4>Stripe</h4>
                     <div class="cf-form-row">
                         <div class="cf-form-group">
-                            <label for="stripe_publishable_key"><?php _e('Публичный ключ Stripe', 'chrono-forge'); ?></label>
+                            <div class="cf-label-with-help">
+                                <label for="stripe_publishable_key"><?php _e('Публичный ключ Stripe', 'chrono-forge'); ?></label>
+                                <?php echo cf_help_tooltip(__('Публичный ключ Stripe (начинается с pk_). Получите его в панели управления Stripe в разделе API Keys.', 'chrono-forge')); ?>
+                            </div>
                             <input type="text" id="stripe_publishable_key" name="stripe[publishable_key]"
                                    value="<?php echo esc_attr($settings['stripe']['publishable_key'] ?? ''); ?>">
                         </div>
                         <div class="cf-form-group">
-                            <label for="stripe_secret_key"><?php _e('Секретный ключ Stripe', 'chrono-forge'); ?></label>
+                            <div class="cf-label-with-help">
+                                <label for="stripe_secret_key"><?php _e('Секретный ключ Stripe', 'chrono-forge'); ?></label>
+                                <?php echo cf_help_tooltip(__('Секретный ключ Stripe (начинается с sk_). ВАЖНО: Никогда не делитесь этим ключом и храните его в безопасности.', 'chrono-forge')); ?>
+                            </div>
                             <input type="password" id="stripe_secret_key" name="stripe[secret_key]"
                                    value="<?php echo esc_attr($settings['stripe']['secret_key'] ?? ''); ?>">
                         </div>
@@ -336,7 +364,10 @@ if (!defined('ABSPATH')) {
                 <h3>Google Calendar</h3>
                 <div class="cf-form-row">
                     <div class="cf-form-group">
-                        <label for="google_client_id"><?php _e('Client ID Google', 'chrono-forge'); ?></label>
+                        <div class="cf-label-with-help">
+                            <label for="google_client_id"><?php _e('Client ID Google', 'chrono-forge'); ?></label>
+                            <?php echo cf_help_tooltip(__('Client ID из Google Cloud Console. Создайте проект в Google Cloud Console, включите Calendar API и создайте OAuth 2.0 credentials.', 'chrono-forge')); ?>
+                        </div>
                         <input type="text" id="google_client_id" name="google_calendar[client_id]"
                                value="<?php echo esc_attr($settings['google_calendar']['client_id'] ?? ''); ?>">
                     </div>

@@ -42,10 +42,31 @@ class ChronoForge_Core {
 
     /**
      * Менеджер админ-меню
-     * 
+     *
      * @var ChronoForge_Admin_Menu
      */
     public $admin_menu;
+
+    /**
+     * Менеджер платежей
+     *
+     * @var ChronoForge_Payment_Manager
+     */
+    public $payment_manager;
+
+    /**
+     * Менеджер уведомлений
+     *
+     * @var ChronoForge_Notification_Manager
+     */
+    public $notification_manager;
+
+    /**
+     * Интеграция с календарями
+     *
+     * @var ChronoForge_Calendar_Integration
+     */
+    public $calendar_integration;
 
     /**
      * Конструктор класса
@@ -119,30 +140,78 @@ class ChronoForge_Core {
     }
 
     /**
-     * Инициализация компонентов плагина
+     * Инициализация компонентов плагина с улучшенной обработкой ошибок
+     *
+     * @since 1.0.0
+     * @return void
      */
     private function init_components() {
-        // Инициализация менеджера БД
-        $this->db_manager = new ChronoForge_DB_Manager();
-        
-        // Инициализация AJAX-обработчика
-        $this->ajax_handler = new ChronoForge_Ajax_Handler($this->db_manager);
-        
-        // Инициализация шорткодов
-        $this->shortcodes = new ChronoForge_Shortcodes($this->db_manager);
+        try {
+            // Инициализация менеджера БД
+            if (class_exists('ChronoForge_DB_Manager')) {
+                $this->db_manager = new ChronoForge_DB_Manager();
+                chrono_forge_log('Database manager initialized successfully', 'info');
+            } else {
+                chrono_forge_log('ChronoForge_DB_Manager class not found', 'error');
+                return;
+            }
 
-        // Инициализация менеджера платежей
-        $this->payment_manager = new ChronoForge_Payment_Manager($this->db_manager);
+            // Инициализация AJAX-обработчика
+            if (class_exists('ChronoForge_Ajax_Handler')) {
+                $this->ajax_handler = new ChronoForge_Ajax_Handler($this->db_manager);
+                chrono_forge_log('AJAX handler initialized successfully', 'info');
+            } else {
+                chrono_forge_log('ChronoForge_Ajax_Handler class not found', 'error');
+            }
 
-        // Инициализация менеджера уведомлений
-        $this->notification_manager = new ChronoForge_Notification_Manager($this->db_manager);
+            // Инициализация шорткодов
+            if (class_exists('ChronoForge_Shortcodes')) {
+                $this->shortcodes = new ChronoForge_Shortcodes($this->db_manager);
+                chrono_forge_log('Shortcodes initialized successfully', 'info');
+            } else {
+                chrono_forge_log('ChronoForge_Shortcodes class not found', 'error');
+            }
 
-        // Инициализация интеграции с календарями
-        $this->calendar_integration = new ChronoForge_Calendar_Integration($this->db_manager);
-        
-        // Инициализация админ-меню только в админке
-        if (is_admin()) {
-            $this->admin_menu = new ChronoForge_Admin_Menu($this->db_manager);
+            // Инициализация менеджера платежей
+            if (class_exists('ChronoForge_Payment_Manager')) {
+                $this->payment_manager = new ChronoForge_Payment_Manager($this->db_manager);
+                chrono_forge_log('Payment manager initialized successfully', 'info');
+            } else {
+                chrono_forge_log('ChronoForge_Payment_Manager class not found', 'warning');
+            }
+
+            // Инициализация менеджера уведомлений
+            if (class_exists('ChronoForge_Notification_Manager')) {
+                $this->notification_manager = new ChronoForge_Notification_Manager($this->db_manager);
+                chrono_forge_log('Notification manager initialized successfully', 'info');
+            } else {
+                chrono_forge_log('ChronoForge_Notification_Manager class not found', 'warning');
+            }
+
+            // Инициализация интеграции с календарями
+            if (class_exists('ChronoForge_Calendar_Integration')) {
+                $this->calendar_integration = new ChronoForge_Calendar_Integration($this->db_manager);
+                chrono_forge_log('Calendar integration initialized successfully', 'info');
+            } else {
+                chrono_forge_log('ChronoForge_Calendar_Integration class not found', 'warning');
+            }
+
+            // Инициализация админ-меню только в админке
+            if (is_admin()) {
+                if (class_exists('ChronoForge_Admin_Menu')) {
+                    $this->admin_menu = new ChronoForge_Admin_Menu($this->db_manager);
+                    chrono_forge_log('Admin menu initialized successfully', 'info');
+                } else {
+                    chrono_forge_log('ChronoForge_Admin_Menu class not found', 'error');
+                }
+            }
+
+            // Проверяем системные требования после инициализации
+            $this->check_system_health();
+
+        } catch (Exception $e) {
+            chrono_forge_log('Exception during component initialization: ' . $e->getMessage(), 'error');
+            add_action('admin_notices', array($this, 'component_init_error_notice'));
         }
     }
 
@@ -188,8 +257,17 @@ class ChronoForge_Core {
         $settings = get_option('chrono_forge_settings', array());
         $plugin_language = $settings['plugin_language'] ?? 'auto';
 
-        // If auto, use WordPress locale, otherwise use selected language
+        // Add filter to override locale if needed
         if ($plugin_language !== 'auto') {
+            add_filter('locale', function($locale) use ($plugin_language) {
+                // Only override for our plugin context
+                if (doing_action('plugins_loaded') || is_admin()) {
+                    return $plugin_language;
+                }
+                return $locale;
+            }, 10, 1);
+
+            // Also add plugin-specific locale filter
             add_filter('plugin_locale', function($locale, $domain) use ($plugin_language) {
                 if ($domain === 'chrono-forge') {
                     return $plugin_language;
@@ -198,11 +276,20 @@ class ChronoForge_Core {
             }, 10, 2);
         }
 
-        load_plugin_textdomain(
+        // Load the plugin textdomain
+        $loaded = load_plugin_textdomain(
             'chrono-forge',
             false,
             dirname(CHRONO_FORGE_PLUGIN_BASENAME) . '/languages/'
         );
+
+        // If the specific locale file doesn't exist, try to load it manually
+        if (!$loaded && $plugin_language !== 'auto') {
+            $mo_file = dirname(CHRONO_FORGE_PLUGIN_FILE) . '/languages/chrono-forge-' . $plugin_language . '.mo';
+            if (file_exists($mo_file)) {
+                load_textdomain('chrono-forge', $mo_file);
+            }
+        }
     }
 
     /**
@@ -271,7 +358,7 @@ class ChronoForge_Core {
         // Локализация для админки
         wp_localize_script('chrono-forge-admin', 'chronoForgeAdmin', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('chrono_forge_admin_nonce'),
+            'nonce' => wp_create_nonce('chrono_forge_nonce'),
         ));
     }
 
@@ -377,5 +464,105 @@ class ChronoForge_Core {
             get_bloginfo('version')
         );
         echo '</p></div>';
+    }
+
+    /**
+     * Проверка состояния системы
+     *
+     * @since 1.0.0
+     * @return void
+     */
+    private function check_system_health() {
+        $checks = chrono_forge_check_system_limits();
+
+        foreach ($checks as $check_name => $check_data) {
+            if ($check_data['status'] === 'critical') {
+                chrono_forge_log("Critical system issue detected: {$check_name}", 'error', $check_data);
+            } elseif ($check_data['status'] === 'warning') {
+                chrono_forge_log("System warning: {$check_name}", 'warning', $check_data);
+            }
+        }
+    }
+
+    /**
+     * Уведомление об ошибке инициализации компонентов
+     *
+     * @since 1.0.0
+     * @return void
+     */
+    public function component_init_error_notice() {
+        echo '<div class="notice notice-error"><p>';
+        echo __('ChronoForge: Произошла ошибка при инициализации компонентов плагина. Проверьте логи для получения подробной информации.', 'chrono-forge');
+        echo '</p></div>';
+    }
+
+    /**
+     * Получить информацию о состоянии плагина
+     *
+     * @since 1.0.0
+     * @return array Информация о состоянии
+     */
+    public function get_plugin_status() {
+        return array(
+            'version' => CHRONO_FORGE_VERSION,
+            'db_manager' => $this->db_manager !== null,
+            'ajax_handler' => $this->ajax_handler !== null,
+            'shortcodes' => $this->shortcodes !== null,
+            'payment_manager' => $this->payment_manager !== null,
+            'notification_manager' => $this->notification_manager !== null,
+            'calendar_integration' => $this->calendar_integration !== null,
+            'admin_menu' => $this->admin_menu !== null,
+            'system_checks' => chrono_forge_check_system_limits(),
+            'performance' => chrono_forge_get_performance_info()
+        );
+    }
+
+    /**
+     * Безопасное получение компонента
+     *
+     * @since 1.0.0
+     * @param string $component_name Имя компонента
+     * @return object|null Компонент или null если не найден
+     */
+    public function get_component($component_name) {
+        $components = array(
+            'db_manager' => $this->db_manager,
+            'ajax_handler' => $this->ajax_handler,
+            'shortcodes' => $this->shortcodes,
+            'payment_manager' => $this->payment_manager,
+            'notification_manager' => $this->notification_manager,
+            'calendar_integration' => $this->calendar_integration,
+            'admin_menu' => $this->admin_menu
+        );
+
+        return isset($components[$component_name]) ? $components[$component_name] : null;
+    }
+
+    /**
+     * Обработчик критических ошибок плагина
+     *
+     * @since 1.0.0
+     * @param string $message Сообщение об ошибке
+     * @param array $context Контекст ошибки
+     * @return void
+     */
+    public function handle_critical_error($message, $context = array()) {
+        chrono_forge_log($message, 'error', $context);
+
+        // Отключаем проблемные компоненты
+        if (isset($context['component'])) {
+            $component = $context['component'];
+            if (property_exists($this, $component)) {
+                $this->$component = null;
+                chrono_forge_log("Disabled component: {$component}", 'warning');
+            }
+        }
+
+        // Показываем уведомление администратору
+        add_action('admin_notices', function() use ($message) {
+            echo '<div class="notice notice-error"><p>';
+            echo sprintf(__('ChronoForge: %s', 'chrono-forge'), esc_html($message));
+            echo '</p></div>';
+        });
     }
 }

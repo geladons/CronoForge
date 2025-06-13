@@ -142,9 +142,9 @@
 
         loadEmployees: function(serviceId) {
             const $container = $('.cf-employees-container');
-            
+
             $container.html('<div class="cf-loading"><div class="cf-loading-spinner"></div><p>' + chronoForgeAjax.strings.loading + '</p></div>');
-            
+
             $.ajax({
                 url: chronoForgeAjax.ajaxUrl,
                 type: 'POST',
@@ -157,11 +157,39 @@
                     if (response.success) {
                         $container.html(response.data.html);
                     } else {
-                        $container.html('<p class="cf-message cf-message-error">' + response.data + '</p>');
+                        // If no employees found, show "Any available" option
+                        const anyEmployeeHtml = `
+                            <div class="cf-employee-item cf-any-employee" data-employee-id="any">
+                                <div class="cf-employee-photo">
+                                    <div class="cf-employee-avatar cf-any-avatar">
+                                        <i class="dashicons dashicons-groups"></i>
+                                    </div>
+                                </div>
+                                <div class="cf-employee-info">
+                                    <h4>Любой доступный специалист</h4>
+                                    <p>Система автоматически подберет свободного специалиста</p>
+                                </div>
+                            </div>
+                        `;
+                        $container.html(anyEmployeeHtml);
                     }
                 },
                 error: function() {
-                    $container.html('<p class="cf-message cf-message-error">' + chronoForgeAjax.strings.error + '</p>');
+                    // On error, also show "Any available" option
+                    const anyEmployeeHtml = `
+                        <div class="cf-employee-item cf-any-employee" data-employee-id="any">
+                            <div class="cf-employee-photo">
+                                <div class="cf-employee-avatar cf-any-avatar">
+                                    <i class="dashicons dashicons-groups"></i>
+                                </div>
+                            </div>
+                            <div class="cf-employee-info">
+                                <h4>Любой доступный специалист</h4>
+                                <p>Система автоматически подберет свободного специалиста</p>
+                            </div>
+                        </div>
+                    `;
+                    $container.html(anyEmployeeHtml);
                 }
             });
         },
@@ -180,18 +208,23 @@
 
         loadAvailableSlots: function() {
             const $container = $('.cf-time-slots-container');
-            
+
             if (!this.selectedData.service_id || !this.selectedData.employee_id || !this.selectedData.date) {
                 return;
             }
-            
+
             $container.html('<div class="cf-loading"><div class="cf-loading-spinner"></div><p>' + chronoForgeAjax.strings.loading + '</p></div>');
-            
+
+            // Use different action for "any" employee
+            const action = this.selectedData.employee_id === 'any' ?
+                'chrono_forge_get_available_slots_any' :
+                'chrono_forge_get_available_slots';
+
             $.ajax({
                 url: chronoForgeAjax.ajaxUrl,
                 type: 'POST',
                 data: {
-                    action: 'chrono_forge_get_available_slots',
+                    action: action,
                     service_id: this.selectedData.service_id,
                     employee_id: this.selectedData.employee_id,
                     date: this.selectedData.date,

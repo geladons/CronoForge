@@ -525,3 +525,92 @@
         width: 95%;
     }
 }
+
+/* Help tooltip system */
+.cf-help-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background: #3498db;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 16px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: help;
+    margin-left: 5px;
+    position: relative;
+    vertical-align: middle;
+}
+
+.cf-help-icon:hover {
+    background: #2980b9;
+}
+
+.cf-tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.cf-tooltip .cf-tooltip-content {
+    visibility: hidden;
+    width: 300px;
+    background-color: #2c3e50;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 12px;
+    position: absolute;
+    z-index: 1000;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -150px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 13px;
+    line-height: 1.4;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.cf-tooltip .cf-tooltip-content::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #2c3e50 transparent transparent transparent;
+}
+
+.cf-tooltip:hover .cf-tooltip-content {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Responsive tooltip positioning */
+@media (max-width: 768px) {
+    .cf-tooltip .cf-tooltip-content {
+        width: 250px;
+        margin-left: -125px;
+    }
+}
+
+/* Label with help icon */
+.cf-label-with-help {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.cf-label-with-help label {
+    margin: 0;
+}
+
+.cf-form-group small {
+    display: block;
+    margin-top: 5px;
+    color: #666;
+    font-size: 12px;
+}

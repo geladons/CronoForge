@@ -132,10 +132,27 @@ class ChronoForge_Admin_Menu {
             return;
         }
 
+        // Обработка GET-запросов (удаление)
+        if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['action'])) {
+            $action = sanitize_text_field($_GET['action']);
+
+            switch ($action) {
+                case 'delete_employee':
+                    $this->handle_delete_employee();
+                    break;
+                case 'delete_service':
+                    $this->handle_delete_service();
+                    break;
+                case 'delete_appointment':
+                    $this->handle_delete_appointment();
+                    break;
+            }
+        }
+
         // Обработка POST-запросов
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
             $action = sanitize_text_field($_POST['action']);
-            
+
             // Проверка nonce
             if (!wp_verify_nonce($_POST['_wpnonce'], 'chrono_forge_admin_action')) {
                 wp_die(__('Ошибка безопасности', 'chrono-forge'));
@@ -562,11 +579,20 @@ class ChronoForge_Admin_Menu {
      * Обработка удаления сотрудника
      */
     private function handle_delete_employee() {
-        if (!empty($_GET['id']) && wp_verify_nonce($_GET['_wpnonce'], 'delete_employee')) {
+        if (!empty($_GET['id']) && !empty($_GET['_wpnonce'])) {
+            // Verify nonce
+            if (!wp_verify_nonce($_GET['_wpnonce'], 'delete_employee_' . $_GET['id'])) {
+                wp_die(__('Ошибка безопасности', 'chrono-forge'));
+            }
+
             $employee_id = intval($_GET['id']);
             $result = $this->db_manager->delete_employee($employee_id);
             $message = $result ? __('Сотрудник удален', 'chrono-forge') : __('Ошибка при удалении сотрудника', 'chrono-forge');
             $this->add_admin_notice($message, $result ? 'success' : 'error');
+
+            // Redirect to avoid resubmission
+            wp_redirect(admin_url('admin.php?page=chrono-forge-employees'));
+            exit;
         }
     }
 
