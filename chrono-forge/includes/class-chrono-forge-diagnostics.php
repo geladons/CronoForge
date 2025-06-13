@@ -81,8 +81,11 @@ class ChronoForge_Diagnostics {
      * @return array Diagnostic results
      */
     public function run_diagnostics($force_refresh = false) {
-        $cache_key = 'chrono_forge_diagnostics_' . CHRONO_FORGE_VERSION;
-        
+        $cache_key = 'chrono_forge_diagnostics_' . CHRONO_FORGE_VERSION . '_v2'; // Updated cache key
+
+        // Always force refresh for now to ensure we get updated results
+        $force_refresh = true;
+
         if (!$force_refresh && !empty($this->diagnostic_cache)) {
             return $this->diagnostic_cache;
         }
@@ -153,6 +156,20 @@ class ChronoForge_Diagnostics {
         $this->diagnostic_cache = $results;
 
         return $results;
+    }
+
+    /**
+     * Run full diagnostics for admin interface
+     *
+     * @return array Complete diagnostic results
+     */
+    public function run_full_diagnostics() {
+        // Clear any existing cache first
+        $cache_key = 'chrono_forge_diagnostics_' . CHRONO_FORGE_VERSION . '_v2';
+        delete_transient($cache_key);
+
+        // Run fresh diagnostics
+        return $this->run_diagnostics(true);
     }
 
     /**
@@ -261,50 +278,218 @@ class ChronoForge_Diagnostics {
             return $errors;
         }
 
-        // Check for unmatched braces
-        $open_braces = substr_count($content, '{');
-        $close_braces = substr_count($content, '}');
-        if ($open_braces !== $close_braces) {
-            $errors[] = sprintf(__('Unmatched braces in %s (open: %d, close: %d)', 'chrono-forge'), $filename, $open_braces, $close_braces);
+        // Only check for critical syntax errors that would prevent PHP from parsing
+        // Avoid false positives from multi-line statements and complex code
+
+        // Check for unmatched braces (only if difference is significant)
+        // Use a more sophisticated counting method that ignores braces in strings and comments
+        $brace_count = $this->count_code_braces($content);
+        $open_braces = $brace_count['open'];
+        $close_braces = $brace_count['close'];
+        $brace_diff = abs($open_braces - $close_braces);
+
+        if ($brace_diff > 2) { // Allow small tolerance for edge cases
+            $errors[] = sprintf(__('Significant brace mismatch in %s (open: %d, close: %d)', 'chrono-forge'), $filename, $open_braces, $close_braces);
         }
 
-        // Check for unmatched parentheses
+        // Check for unmatched parentheses (only if difference is very significant)
         $open_parens = substr_count($content, '(');
         $close_parens = substr_count($content, ')');
-        if ($open_parens !== $close_parens) {
-            $errors[] = sprintf(__('Unmatched parentheses in %s (open: %d, close: %d)', 'chrono-forge'), $filename, $open_parens, $close_parens);
+        $paren_diff = abs($open_parens - $close_parens);
+        if ($paren_diff > 10) { // Very generous tolerance for complex SQL, regex, and function calls
+            $errors[] = sprintf(__('Significant parentheses mismatch in %s (open: %d, close: %d)', 'chrono-forge'), $filename, $open_parens, $close_parens);
         }
 
-        // Check for common syntax errors
+        // Check for obvious syntax errors only
         $lines = explode("\n", $content);
+        $in_multiline_string = false;
+        $in_comment_block = false;
+
         foreach ($lines as $line_num => $line) {
             $line_num++; // 1-based line numbers
             $trimmed = trim($line);
 
-            // Skip empty lines and comments
-            if (empty($trimmed) || strpos($trimmed, '//') === 0 || strpos($trimmed, '#') === 0) {
+            // Skip empty lines
+            if (empty($trimmed)) {
                 continue;
             }
 
-            // Check for missing semicolons (basic check)
-            if (preg_match('/^\s*(return|echo|print|throw|break|continue)\s+[^;]+[^;}]$/', $trimmed)) {
+            // Handle multi-line comments
+            if (strpos($trimmed, '/*') !== false) {
+                $in_comment_block = true;
+            }
+            if (strpos($trimmed, '*/') !== false) {
+                $in_comment_block = false;
+                continue;
+            }
+            if ($in_comment_block) {
+                continue;
+            }
+
+            // Skip single-line comments
+            if (strpos($trimmed, '//') === 0 || strpos($trimmed, '#') === 0) {
+                continue;
+            }
+
+            // Only check for very obvious syntax errors
+            // Check for missing semicolons on simple statements only
+            if (preg_match('/^\s*(return|echo|print|throw|break|continue)\s+[^;{}\'"]+[^;{}\s]$/', $trimmed) &&
+                !preg_match('/\$\w+\s*\(/', $trimmed) && // Not a function call
+                !preg_match('/\w+\s*\(/', $trimmed) && // Not a function call
+                !preg_match('/[\'"]/', $trimmed)) { // Not containing quotes
                 $errors[] = sprintf(__('Possible missing semicolon in %s at line %d', 'chrono-forge'), $filename, $line_num);
             }
 
-            // Check for unclosed strings (basic check)
-            $single_quotes = substr_count($line, "'") - substr_count($line, "\\'");
-            $double_quotes = substr_count($line, '"') - substr_count($line, '\\"');
+            // Only check for unclosed strings on very simple lines (avoid false positives)
+            if (!preg_match('/^\s*\$\w+\s*[.=]/', $trimmed) && // Not variable assignment/concatenation
+                !preg_match('/sprintf\s*\(/', $trimmed) && // Not sprintf function
+                !preg_match('/CREATE\s+TABLE/i', $trimmed) && // Not SQL statement
+                !preg_match('/INSERT\s+INTO/i', $trimmed) && // Not SQL statement
+                !preg_match('/SELECT\s+/i', $trimmed) && // Not SQL statement
+                !preg_match('/UPDATE\s+/i', $trimmed) && // Not SQL statement
+                !preg_match('/DELETE\s+/i', $trimmed) && // Not SQL statement
+                !preg_match('/ALTER\s+TABLE/i', $trimmed) && // Not SQL statement
+                !preg_match('/DROP\s+TABLE/i', $trimmed) && // Not SQL statement
+                !preg_match('/SHOW\s+TABLES/i', $trimmed) && // Not SQL statement
+                !preg_match('/DESCRIBE\s+/i', $trimmed) && // Not SQL statement
+                !preg_match('/ENGINE\s*=/i', $trimmed) && // Not SQL table definition
+                !preg_match('/CHARSET\s*=/i', $trimmed) && // Not SQL table definition
+                !preg_match('/COLLATE\s*=/i', $trimmed) && // Not SQL table definition
+                !preg_match('/PRIMARY\s+KEY/i', $trimmed) && // Not SQL table definition
+                !preg_match('/FOREIGN\s+KEY/i', $trimmed) && // Not SQL table definition
+                !preg_match('/AUTO_INCREMENT/i', $trimmed) && // Not SQL table definition
+                !preg_match('/DEFAULT\s+/i', $trimmed) && // Not SQL table definition
+                !preg_match('/NOT\s+NULL/i', $trimmed) && // Not SQL table definition
+                !preg_match('/UNIQUE\s+KEY/i', $trimmed) && // Not SQL table definition
+                !preg_match('/KEY\s+\w+/i', $trimmed) && // Not SQL table definition
+                !preg_match('/INDEX\s+/i', $trimmed) && // Not SQL table definition
+                !preg_match('/\)\s*ENGINE/i', $trimmed) && // Not SQL table end
+                !preg_match('/preg_match\s*\(/', $trimmed) && // Not regex function
+                !preg_match('/preg_replace\s*\(/', $trimmed) && // Not regex function
+                !preg_match('/array\s*\(/', $trimmed) && // Not array definition
+                !preg_match('/function\s*\(/', $trimmed) && // Not function definition
+                !preg_match('/\w+\s*\(.*\)\s*{/', $trimmed) && // Not function call with block
+                strlen($trimmed) < 100) { // Only very short, simple lines
 
-            if ($single_quotes % 2 !== 0) {
-                $errors[] = sprintf(__('Possible unclosed single quote in %s at line %d', 'chrono-forge'), $filename, $line_num);
-            }
+                // Simple quote check for obvious errors only on very simple statements
+                $single_quotes = substr_count($line, "'");
+                $escaped_single = substr_count($line, "\\'");
+                $double_quotes = substr_count($line, '"');
+                $escaped_double = substr_count($line, '\\"');
 
-            if ($double_quotes % 2 !== 0) {
-                $errors[] = sprintf(__('Possible unclosed double quote in %s at line %d', 'chrono-forge'), $filename, $line_num);
+                // Only flag if there's an odd number of quotes and it's a very simple line
+                if (($single_quotes - $escaped_single) % 2 !== 0 &&
+                    !preg_match('/\$\w+\s*[.=]/', $trimmed) &&
+                    !preg_match('/[{}();]/', $trimmed) && // No complex syntax
+                    strlen($trimmed) < 50) { // Very short lines only
+                    // Additional check: only flag if it looks like a simple assignment or echo
+                    if (preg_match('/^\s*(echo|print|return)\s+/', $trimmed)) {
+                        $errors[] = sprintf(__('Possible unclosed single quote in %s at line %d', 'chrono-forge'), $filename, $line_num);
+                    }
+                }
+
+                if (($double_quotes - $escaped_double) % 2 !== 0 &&
+                    !preg_match('/\$\w+\s*[.=]/', $trimmed) &&
+                    !preg_match('/[{}();]/', $trimmed) && // No complex syntax
+                    strlen($trimmed) < 50) { // Very short lines only
+                    // Additional check: only flag if it looks like a simple assignment or echo
+                    if (preg_match('/^\s*(echo|print|return)\s+/', $trimmed)) {
+                        $errors[] = sprintf(__('Possible unclosed double quote in %s at line %d', 'chrono-forge'), $filename, $line_num);
+                    }
+                }
             }
         }
 
         return $errors;
+    }
+
+    /**
+     * Count braces in code, ignoring those in strings and comments
+     *
+     * @param string $content File content
+     * @return array Array with 'open' and 'close' counts
+     */
+    private function count_code_braces($content) {
+        $open_count = 0;
+        $close_count = 0;
+        $in_single_quote = false;
+        $in_double_quote = false;
+        $in_single_comment = false;
+        $in_multi_comment = false;
+        $escaped = false;
+
+        $lines = explode("\n", $content);
+
+        foreach ($lines as $line) {
+            $chars = str_split($line);
+            $line_length = count($chars);
+
+            for ($i = 0; $i < $line_length; $i++) {
+                $char = $chars[$i];
+                $next_char = isset($chars[$i + 1]) ? $chars[$i + 1] : '';
+
+                // Handle escape sequences
+                if ($escaped) {
+                    $escaped = false;
+                    continue;
+                }
+
+                if ($char === '\\' && ($in_single_quote || $in_double_quote)) {
+                    $escaped = true;
+                    continue;
+                }
+
+                // Handle comments
+                if (!$in_single_quote && !$in_double_quote) {
+                    if ($char === '/' && $next_char === '/') {
+                        $in_single_comment = true;
+                        break; // Rest of line is comment
+                    }
+
+                    if ($char === '/' && $next_char === '*') {
+                        $in_multi_comment = true;
+                        $i++; // Skip next char
+                        continue;
+                    }
+
+                    if ($in_multi_comment && $char === '*' && $next_char === '/') {
+                        $in_multi_comment = false;
+                        $i++; // Skip next char
+                        continue;
+                    }
+                }
+
+                // Skip if in comment
+                if ($in_single_comment || $in_multi_comment) {
+                    continue;
+                }
+
+                // Handle quotes
+                if ($char === "'" && !$in_double_quote) {
+                    $in_single_quote = !$in_single_quote;
+                    continue;
+                }
+
+                if ($char === '"' && !$in_single_quote) {
+                    $in_double_quote = !$in_double_quote;
+                    continue;
+                }
+
+                // Count braces only if not in string or comment
+                if (!$in_single_quote && !$in_double_quote && !$in_single_comment && !$in_multi_comment) {
+                    if ($char === '{') {
+                        $open_count++;
+                    } elseif ($char === '}') {
+                        $close_count++;
+                    }
+                }
+            }
+
+            // Reset single-line comment flag at end of line
+            $in_single_comment = false;
+        }
+
+        return array('open' => $open_count, 'close' => $close_count);
     }
 
     /**

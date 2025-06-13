@@ -737,23 +737,24 @@ class ChronoForge_Core {
         echo '</p></div>';
 
         // Add JavaScript for recovery
-        echo '<script>
-        function chronoForgeDisableEmergencyMode() {
-            if (confirm("' . __('Попытаться выйти из аварийного режима? Это может вызвать повторную ошибку.', 'chrono-forge') . '")) {
-                var data = {
-                    action: "chrono_forge_disable_emergency_mode",
-                    nonce: "' . wp_create_nonce('chrono_forge_emergency') . '"
-                };
-                jQuery.post(ajaxurl, data, function(response) {
-                    if (response.success) {
-                        location.reload();
-                    } else {
-                        alert("' . __('Не удалось выйти из аварийного режима', 'chrono-forge') . '");
-                    }
-                });
-            }
-        }
-        </script>';
+        $script = '<script>' .
+            'function chronoForgeDisableEmergencyMode() {' .
+                'if (confirm("' . esc_js(__('Попытаться выйти из аварийного режима? Это может вызвать повторную ошибку.', 'chrono-forge')) . '")) {' .
+                    'var data = {' .
+                        'action: "chrono_forge_disable_emergency_mode",' .
+                        'nonce: "' . wp_create_nonce('chrono_forge_emergency') . '"' .
+                    '};' .
+                    'jQuery.post(ajaxurl, data, function(response) {' .
+                        'if (response.success) {' .
+                            'location.reload();' .
+                        '} else {' .
+                            'alert("' . esc_js(__('Не удалось выйти из аварийного режима', 'chrono-forge')) . '");' .
+                        '}' .
+                    '});' .
+                '}' .
+            '}' .
+            '</script>';
+        echo $script;
     }
 
     /**

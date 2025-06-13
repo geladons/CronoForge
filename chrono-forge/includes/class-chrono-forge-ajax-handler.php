@@ -103,28 +103,21 @@ class ChronoForge_Ajax_Handler {
                 wp_send_json_error(__('Сотрудник не найден', 'chrono-forge'));
             }
 
-        // Получение информации об услуге
-        $service = $this->db_manager->get_service($service_id);
-        if (!$service) {
-            wp_send_json_error(__('Услуга не найдена', 'chrono-forge'));
+            // Получение графика работы сотрудника
+            $schedule = $this->get_employee_schedule_for_date($employee_id, $date);
+            if (!$schedule) {
+                wp_send_json_error(__('Сотрудник не работает в выбранную дату', 'chrono-forge'));
+            }
+
+            // Генерация доступных слотов
+            $available_slots = $this->generate_available_slots($employee_id, $date, $service, $schedule);
+
+            wp_send_json_success($available_slots);
+
+        } catch (Exception $e) {
+            chrono_forge_log('Exception in get_available_slots: ' . $e->getMessage(), 'error');
+            wp_send_json_error(__('Произошла ошибка при получении доступных слотов', 'chrono-forge'));
         }
-
-        // Получение информации о сотруднике
-        $employee = $this->db_manager->get_employee($employee_id);
-        if (!$employee) {
-            wp_send_json_error(__('Сотрудник не найден', 'chrono-forge'));
-        }
-
-        // Получение графика работы сотрудника
-        $schedule = $this->get_employee_schedule_for_date($employee_id, $date);
-        if (!$schedule) {
-            wp_send_json_error(__('Сотрудник не работает в выбранную дату', 'chrono-forge'));
-        }
-
-        // Генерация доступных слотов
-        $available_slots = $this->generate_available_slots($employee_id, $date, $service, $schedule);
-
-        wp_send_json_success($available_slots);
     }
 
     /**
@@ -178,89 +171,105 @@ class ChronoForge_Ajax_Handler {
                 wp_send_json_error(__('Неверный формат времени', 'chrono-forge'));
             }
 
-        // Получение информации об услуге
-        $service = $this->db_manager->get_service($service_id);
-        if (!$service) {
-            wp_send_json_error(__('Услуга не найдена', 'chrono-forge'));
-        }
+            // Получение информации об услуге
+            $service = $this->db_manager->get_service($service_id);
+            if (!$service) {
+                wp_send_json_error(__('Услуга не найдена', 'chrono-forge'));
+            }
 
-        // Вычисление времени окончания
-        $end_time = date('H:i:s', strtotime($time) + ($service->duration * 60));
+            // Вычисление времени окончания
+            $end_time = date('H:i:s', strtotime($time) + ($service->duration * 60));
 
-        // Если выбран "любой доступный специалист", найти подходящего
-        if ($employee_id === 'any') {
-            $available_employees = $this->db_manager->get_employees_by_service($service_id);
-            $selected_employee_id = null;
+            // Если выбран "любой доступный специалист", найти подходящего
+            if ($employee_id === 'any') {
+                $available_employees = $this->db_manager->get_employees_by_service($service_id);
+                $selected_employee_id = null;
 
-            foreach ($available_employees as $emp) {
-                if ($this->db_manager->is_slot_available($emp->id, $date, $time, $end_time)) {
-                    $selected_employee_id = $emp->id;
-                    break;
+                foreach ($available_employees as $emp) {
+                    if ($this->db_manager->is_slot_available($emp->id, $date, $time, $end_time)) {
+                        $selected_employee_id = $emp->id;
+                        break;
+                    }
+                }
+
+                if (!$selected_employee_id) {
+                    wp_send_json_error(__('Нет доступных специалистов на выбранное время', 'chrono-forge'));
+                }
+
+                $employee_id = $selected_employee_id;
+            } else {
+                // Проверка доступности слота для конкретного сотрудника
+                if (!$this->db_manager->is_slot_available($employee_id, $date, $time, $end_time)) {
+                    wp_send_json_error(__('Выбранное время уже занято', 'chrono-forge'));
                 }
             }
 
-            if (!$selected_employee_id) {
-                wp_send_json_error(__('Нет доступных специалистов на выбранное время', 'chrono-forge'));
+            // Поиск или создание клиента
+            $customer = $this->db_manager->get_customer_by_email($customer_data['email']);
+            if (!$customer) {
+                $customer_id = $this->db_manager->insert_customer($customer_data);
+                if (!$customer_id) {
+                    wp_send_json_error(__('Ошибка при создании клиента', 'chrono-forge'));
+                }
+            } else {
+                $customer_id = $customer->id;
+                // Обновляем данные клиента
+                $this->db_manager->update_customer($customer_id, $customer_data);
             }
 
-            $employee_id = $selected_employee_id;
-        } else {
-            // Проверка доступности слота для конкретного сотрудника
-            if (!$this->db_manager->is_slot_available($employee_id, $date, $time, $end_time)) {
-                wp_send_json_error(__('Выбранное время уже занято', 'chrono-forge'));
+            // Создание записи
+            $appointment_data = array(
+                'service_id' => $service_id,
+                'employee_id' => $employee_id,
+                'customer_id' => $customer_id,
+                'appointment_date' => $date,
+                'appointment_time' => $time,
+                'end_time' => $end_time,
+                'status' => 'pending',
+                'notes' => $notes,
+                'total_price' => $service->price
+            );
+
+            $appointment_id = $this->db_manager->insert_appointment($appointment_data);
+
+            if (!$appointment_id) {
+                wp_send_json_error(__('Ошибка при создании записи', 'chrono-forge'));
             }
+
+            // Отправка уведомлений (если включены)
+            $this->send_appointment_notifications($appointment_id, 'created');
+
+            wp_send_json_success(array(
+                'appointment_id' => $appointment_id,
+                'message' => __('Запись успешно создана', 'chrono-forge')
+            ));
+
+        } catch (Exception $e) {
+            chrono_forge_log('Exception in create_appointment: ' . $e->getMessage(), 'error');
+            wp_send_json_error(__('Произошла ошибка при создании записи', 'chrono-forge'));
         }
-
-        // Поиск или создание клиента
-        $customer = $this->db_manager->get_customer_by_email($customer_data['email']);
-        if (!$customer) {
-            $customer_id = $this->db_manager->insert_customer($customer_data);
-            if (!$customer_id) {
-                wp_send_json_error(__('Ошибка при создании клиента', 'chrono-forge'));
-            }
-        } else {
-            $customer_id = $customer->id;
-            // Обновляем данные клиента
-            $this->db_manager->update_customer($customer_id, $customer_data);
-        }
-
-        // Создание записи
-        $appointment_data = array(
-            'service_id' => $service_id,
-            'employee_id' => $employee_id,
-            'customer_id' => $customer_id,
-            'appointment_date' => $date,
-            'appointment_time' => $time,
-            'end_time' => $end_time,
-            'status' => 'pending',
-            'notes' => $notes,
-            'total_price' => $service->price
-        );
-
-        $appointment_id = $this->db_manager->insert_appointment($appointment_data);
-
-        if (!$appointment_id) {
-            wp_send_json_error(__('Ошибка при создании записи', 'chrono-forge'));
-        }
-
-        // Отправка уведомлений (если включены)
-        $this->send_appointment_notifications($appointment_id, 'created');
-
-        wp_send_json_success(array(
-            'appointment_id' => $appointment_id,
-            'message' => __('Запись успешно создана', 'chrono-forge')
-        ));
     }
 
     /**
      * Проверка корректности даты
-     * 
+     *
      * @param string $date
      * @return bool
      */
     private function is_valid_date($date) {
         $d = DateTime::createFromFormat('Y-m-d', $date);
         return $d && $d->format('Y-m-d') === $date;
+    }
+
+    /**
+     * Проверка корректности времени
+     *
+     * @param string $time
+     * @return bool
+     */
+    private function is_valid_time($time) {
+        $t = DateTime::createFromFormat('H:i', $time);
+        return $t && $t->format('H:i') === $time;
     }
 
     /**
@@ -1071,41 +1080,9 @@ class ChronoForge_Ajax_Handler {
         return $slots;
     }
 
-    /**
-     * Validate date format
-     *
-     * @since 1.0.0
-     * @param string $date Date string to validate
-     * @return bool True if valid date format
-     */
-    private function is_valid_date($date) {
-        if (empty($date)) {
-            return false;
-        }
 
-        $d = DateTime::createFromFormat('Y-m-d', $date);
-        return $d && $d->format('Y-m-d') === $date;
-    }
 
-    /**
-     * Validate time format
-     *
-     * @since 1.0.0
-     * @param string $time Time string to validate
-     * @return bool True if valid time format
-     */
-    private function is_valid_time($time) {
-        if (empty($time)) {
-            return false;
-        }
 
-        $t = DateTime::createFromFormat('H:i:s', $time);
-        if (!$t) {
-            $t = DateTime::createFromFormat('H:i', $time);
-        }
-
-        return $t !== false;
-    }
 
     /**
      * Sanitize and validate appointment status

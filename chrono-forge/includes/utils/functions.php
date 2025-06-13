@@ -708,9 +708,9 @@ function chrono_forge_clear_all_caches() {
         // Очищаем транзиенты плагина
         global $wpdb;
         $wpdb->query(
-            "DELETE FROM {$wpdb->options}
-             WHERE option_name LIKE '_transient_chrono_forge_%'
-             OR option_name LIKE '_transient_timeout_chrono_forge_%'"
+            "DELETE FROM {$wpdb->options} " .
+            "WHERE option_name LIKE '_transient_chrono_forge_%' " .
+            "OR option_name LIKE '_transient_timeout_chrono_forge_%'"
         );
 
         // Очищаем кэш объектов

@@ -201,10 +201,10 @@ class ChronoForge_Shortcodes {
         foreach ($categories as $category) {
             $selected_class = ($selected_id == $category->id) ? ' selected' : '';
             $html .= sprintf(
-                '<div class="cf-category-item%s" data-category-id="%d" style="border-color: %s;">
-                    <h4>%s</h4>
-                    <p>%s</p>
-                </div>',
+                '<div class="cf-category-item%s" data-category-id="%d" style="border-color: %s;">' .
+                    '<h4>%s</h4>' .
+                    '<p>%s</p>' .
+                '</div>',
                 $selected_class,
                 $category->id,
                 $category->color,
@@ -239,16 +239,16 @@ class ChronoForge_Shortcodes {
             $price_html = $service->price > 0 ? '<span class="cf-service-price">' . number_format($service->price, 2) . ' ₽</span>' : '';
             
             $html .= sprintf(
-                '<div class="cf-service-item%s" data-service-id="%d" data-duration="%d" data-price="%.2f">
-                    <div class="cf-service-info">
-                        <h4>%s</h4>
-                        <p>%s</p>
-                        <div class="cf-service-meta">
-                            <span class="cf-service-duration">%d мин.</span>
-                            %s
-                        </div>
-                    </div>
-                </div>',
+                '<div class="cf-service-item%s" data-service-id="%d" data-duration="%d" data-price="%.2f">' .
+                    '<div class="cf-service-info">' .
+                        '<h4>%s</h4>' .
+                        '<p>%s</p>' .
+                        '<div class="cf-service-meta">' .
+                            '<span class="cf-service-duration">%d мин.</span>' .
+                            '%s' .
+                        '</div>' .
+                    '</div>' .
+                '</div>',
                 $selected_class,
                 $service->id,
                 $service->duration,
@@ -288,13 +288,13 @@ class ChronoForge_Shortcodes {
                 '<div class="cf-employee-avatar">' . substr($employee->name, 0, 1) . '</div>';
             
             $html .= sprintf(
-                '<div class="cf-employee-item%s" data-employee-id="%d">
-                    <div class="cf-employee-photo">%s</div>
-                    <div class="cf-employee-info">
-                        <h4>%s</h4>
-                        <p>%s</p>
-                    </div>
-                </div>',
+                '<div class="cf-employee-item%s" data-employee-id="%d">' .
+                    '<div class="cf-employee-photo">%s</div>' .
+                    '<div class="cf-employee-info">' .
+                        '<h4>%s</h4>' .
+                        '<p>%s</p>' .
+                    '</div>' .
+                '</div>',
                 $selected_class,
                 $employee->id,
                 $photo_html,
