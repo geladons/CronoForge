@@ -1,0 +1,527 @@
+/**
+ * Стили для админ-панели плагина ChronoForge
+ */
+
+/* Общие стили */
+.chrono-forge-admin {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.chrono-forge-admin * {
+    box-sizing: border-box;
+}
+
+/* Заголовки страниц */
+.cf-page-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.cf-page-title h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #23282d;
+}
+
+.cf-page-title .cf-btn {
+    margin-left: 15px;
+}
+
+/* Кнопки */
+.cf-btn {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #0073aa;
+    color: white;
+    text-decoration: none;
+    border-radius: 3px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1.4;
+    transition: background-color 0.3s ease;
+}
+
+.cf-btn:hover {
+    background: #005a87;
+    color: white;
+}
+
+.cf-btn-secondary {
+    background: #666;
+}
+
+.cf-btn-secondary:hover {
+    background: #555;
+}
+
+.cf-btn-danger {
+    background: #dc3232;
+}
+
+.cf-btn-danger:hover {
+    background: #c62d2d;
+}
+
+.cf-btn-success {
+    background: #46b450;
+}
+
+.cf-btn-success:hover {
+    background: #3e9b47;
+}
+
+/* Карточки статистики */
+.cf-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.cf-stat-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #0073aa;
+}
+
+.cf-stat-card.revenue {
+    border-left-color: #46b450;
+}
+
+.cf-stat-card.appointments {
+    border-left-color: #0073aa;
+}
+
+.cf-stat-card.customers {
+    border-left-color: #f56e28;
+}
+
+.cf-stat-card.today {
+    border-left-color: #dc3232;
+}
+
+.cf-stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #23282d;
+    margin-bottom: 5px;
+}
+
+.cf-stat-label {
+    font-size: 14px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Таблицы */
+.cf-table-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.cf-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.cf-table th,
+.cf-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.cf-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #23282d;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cf-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.cf-table .cf-actions {
+    white-space: nowrap;
+}
+
+.cf-table .cf-actions a {
+    margin-right: 8px;
+    font-size: 12px;
+}
+
+/* Статусы */
+.cf-status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cf-status.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.cf-status.confirmed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.cf-status.completed {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.cf-status.cancelled {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.cf-status.active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.cf-status.inactive {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+/* Формы */
+.cf-form-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.cf-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.cf-form-group {
+    margin-bottom: 20px;
+}
+
+.cf-form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #23282d;
+}
+
+.cf-form-group input,
+.cf-form-group select,
+.cf-form-group textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.cf-form-group input:focus,
+.cf-form-group select:focus,
+.cf-form-group textarea:focus {
+    outline: none;
+    border-color: #0073aa;
+    box-shadow: 0 0 0 1px #0073aa;
+}
+
+.cf-form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Календарь */
+.cf-calendar-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.cf-calendar-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.cf-calendar-filters {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.cf-calendar-filters select {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+/* Модальные окна */
+.cf-modal {
+    display: none;
+    position: fixed;
+    z-index: 100000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.cf-modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.cf-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.cf-modal-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #23282d;
+}
+
+.cf-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cf-modal-close:hover {
+    color: #333;
+}
+
+.cf-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+/* График работы */
+.cf-schedule-grid {
+    display: grid;
+    gap: 20px;
+}
+
+.cf-schedule-day {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+}
+
+.cf-schedule-day.cf-disabled {
+    opacity: 0.6;
+    background: #f8f9fa;
+}
+
+.cf-schedule-day-header {
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #eee;
+}
+
+.cf-schedule-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    cursor: pointer;
+}
+
+.cf-schedule-checkbox input[type="checkbox"] {
+    transform: scale(1.3);
+    margin: 0;
+}
+
+.cf-schedule-times {
+    padding: 20px;
+    display: grid;
+    gap: 20px;
+}
+
+.cf-time-group {
+    display: grid;
+    gap: 8px;
+}
+
+.cf-time-group label {
+    font-weight: 600;
+    color: #555;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cf-time-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cf-time-inputs input[type="time"] {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 120px;
+}
+
+.cf-time-inputs input[type="time"]:disabled {
+    background: #f5f5f5;
+    color: #999;
+}
+
+.cf-time-inputs span {
+    color: #666;
+    font-weight: 500;
+}
+
+/* Цветовые индикаторы */
+.cf-color-indicator {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+/* Фильтры */
+.cf-filters {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.cf-filters-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    align-items: end;
+}
+
+.cf-filters .cf-form-group {
+    margin-bottom: 0;
+}
+
+/* Пагинация */
+.cf-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.cf-pagination a,
+.cf-pagination span {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    text-decoration: none;
+    color: #0073aa;
+    border-radius: 4px;
+}
+
+.cf-pagination a:hover {
+    background: #f8f9fa;
+}
+
+.cf-pagination .current {
+    background: #0073aa;
+    color: white;
+    border-color: #0073aa;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .cf-page-title {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .cf-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .cf-form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .cf-schedule-day {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        text-align: left;
+    }
+    
+    .cf-filters-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .cf-table-container {
+        overflow-x: auto;
+    }
+    
+    .cf-modal-content {
+        margin: 10% auto;
+        width: 95%;
+    }
+}

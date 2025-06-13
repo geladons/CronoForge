@@ -1,0 +1,665 @@
+# ChronoForge WordPress Plugin - English Translation
+# Copyright (C) 2024 ChronoForge Team
+# This file is distributed under the same license as the ChronoForge package.
+msgid ""
+msgstr ""
+"Project-Id-Version: ChronoForge 1.0.0\n"
+"Report-Msgid-Bugs-To: https://chronoforge.com/support\n"
+"POT-Creation-Date: 2024-01-01 12:00+0000\n"
+"PO-Revision-Date: 2024-01-01 12:00+0000\n"
+"Last-Translator: ChronoForge Team <support@chronoforge.com>\n"
+"Language-Team: English <en@li.org>\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: WP-CLI 2.8.1\n"
+"X-Domain: chrono-forge\n"
+
+#: chrono-forge.php
+msgid "ChronoForge требует PHP версии 7.4 или выше. Ваша версия: %s"
+msgstr "ChronoForge requires PHP version 7.4 or higher. Your version: %s"
+
+msgid "ChronoForge требует WordPress версии 5.0 или выше. Ваша версия: %s"
+msgstr "ChronoForge requires WordPress version 5.0 or higher. Your version: %s"
+
+msgid "Настройки"
+msgstr "Settings"
+
+#: includes/class-chrono-forge-activator.php
+msgid "Ошибка безопасности"
+msgstr "Security error"
+
+msgid "Неверные параметры"
+msgstr "Invalid parameters"
+
+msgid "Неверный формат даты"
+msgstr "Invalid date format"
+
+msgid "Услуга не найдена"
+msgstr "Service not found"
+
+msgid "Сотрудник не найден"
+msgstr "Employee not found"
+
+msgid "Сотрудник не работает в выбранную дату"
+msgstr "Employee is not working on the selected date"
+
+msgid "Заполните все обязательные поля"
+msgstr "Please fill in all required fields"
+
+msgid "Неверный формат email"
+msgstr "Invalid email format"
+
+msgid "Выбранное время уже занято"
+msgstr "Selected time slot is already taken"
+
+msgid "Ошибка при создании клиента"
+msgstr "Error creating customer"
+
+msgid "Ошибка при создании записи"
+msgstr "Error creating appointment"
+
+msgid "Запись успешно создана"
+msgstr "Appointment successfully created"
+
+#: includes/class-chrono-forge-core.php
+msgid "Загрузка..."
+msgstr "Loading..."
+
+msgid "Произошла ошибка. Попробуйте еще раз."
+msgstr "An error occurred. Please try again."
+
+msgid "Выберите услугу"
+msgstr "Select a service"
+
+msgid "Выберите специалиста"
+msgstr "Select a specialist"
+
+msgid "Выберите дату"
+msgstr "Select a date"
+
+msgid "Выберите время"
+msgstr "Select a time"
+
+msgid "На выбранную дату нет свободных слотов"
+msgstr "No available slots for the selected date"
+
+#: includes/class-chrono-forge-shortcodes.php
+msgid "Для доступа к личному кабинету необходимо войти в систему."
+msgstr "You need to log in to access the customer panel."
+
+msgid "Клиент не найден в системе."
+msgstr "Customer not found in the system."
+
+msgid "Выберите категорию"
+msgstr "Select a category"
+
+msgid "Услуги не найдены."
+msgstr "No services found."
+
+msgid "Сотрудники не найдены."
+msgstr "No employees found."
+
+#: includes/utils/functions.php
+msgid "Ожидает подтверждения"
+msgstr "Pending confirmation"
+
+msgid "Подтверждена"
+msgstr "Confirmed"
+
+msgid "Завершена"
+msgstr "Completed"
+
+msgid "Отменена"
+msgstr "Cancelled"
+
+msgid "Не явился"
+msgstr "No show"
+
+msgid "Ожидает оплаты"
+msgstr "Pending payment"
+
+msgid "Оплачено"
+msgstr "Paid"
+
+msgid "Ошибка оплаты"
+msgstr "Payment error"
+
+msgid "Возврат"
+msgstr "Refund"
+
+msgid "Наличные"
+msgstr "Cash"
+
+msgid "Stripe"
+msgstr "Stripe"
+
+msgid "PayPal"
+msgstr "PayPal"
+
+msgid "Square"
+msgstr "Square"
+
+msgid "WooCommerce"
+msgstr "WooCommerce"
+
+msgid "Воскресенье"
+msgstr "Sunday"
+
+msgid "Понедельник"
+msgstr "Monday"
+
+msgid "Вторник"
+msgstr "Tuesday"
+
+msgid "Среда"
+msgstr "Wednesday"
+
+msgid "Четверг"
+msgstr "Thursday"
+
+msgid "Пятница"
+msgstr "Friday"
+
+msgid "Суббота"
+msgstr "Saturday"
+
+#: admin/class-chrono-forge-admin-menu.php
+msgid "ChronoForge"
+msgstr "ChronoForge"
+
+msgid "Дашборд"
+msgstr "Dashboard"
+
+msgid "Календарь"
+msgstr "Calendar"
+
+msgid "Записи"
+msgstr "Appointments"
+
+msgid "Услуги"
+msgstr "Services"
+
+msgid "Сотрудники"
+msgstr "Employees"
+
+msgid "Клиенты"
+msgstr "Customers"
+
+msgid "Услуга обновлена"
+msgstr "Service updated"
+
+msgid "Ошибка при обновлении услуги"
+msgstr "Error updating service"
+
+msgid "Услуга создана"
+msgstr "Service created"
+
+msgid "Ошибка при создании услуги"
+msgstr "Error creating service"
+
+msgid "Сотрудник обновлен"
+msgstr "Employee updated"
+
+msgid "Ошибка при обновлении сотрудника"
+msgstr "Error updating employee"
+
+msgid "Сотрудник создан"
+msgstr "Employee created"
+
+msgid "Ошибка при создании сотрудника"
+msgstr "Error creating employee"
+
+msgid "Настройки сохранены"
+msgstr "Settings saved"
+
+msgid "Ошибка при сохранении настроек"
+msgstr "Error saving settings"
+
+msgid "Услуга удалена"
+msgstr "Service deleted"
+
+msgid "Ошибка при удалении услуги"
+msgstr "Error deleting service"
+
+msgid "Сотрудник удален"
+msgstr "Employee deleted"
+
+msgid "Ошибка при удалении сотрудника"
+msgstr "Error deleting employee"
+
+msgid "Запись удалена"
+msgstr "Appointment deleted"
+
+msgid "Ошибка при удалении записи"
+msgstr "Error deleting appointment"
+
+#: admin/views/view-dashboard.php
+msgid "ChronoForge - Дашборд"
+msgstr "ChronoForge - Dashboard"
+
+msgid "Новая запись"
+msgstr "New Appointment"
+
+msgid "Доход за месяц"
+msgstr "Monthly Revenue"
+
+msgid "Записей за месяц"
+msgstr "Monthly Appointments"
+
+msgid "Всего клиентов"
+msgstr "Total Customers"
+
+msgid "Записей на сегодня"
+msgstr "Today's Appointments"
+
+msgid "Последние записи"
+msgstr "Recent Appointments"
+
+msgid "Клиент"
+msgstr "Customer"
+
+msgid "Услуга"
+msgstr "Service"
+
+msgid "Специалист"
+msgstr "Specialist"
+
+msgid "Дата"
+msgstr "Date"
+
+msgid "Время"
+msgstr "Time"
+
+msgid "Статус"
+msgstr "Status"
+
+msgid "Действия"
+msgstr "Actions"
+
+msgid "мин."
+msgstr "min."
+
+msgid "Редактировать"
+msgstr "Edit"
+
+msgid "Подтвердить"
+msgstr "Confirm"
+
+msgid "Удалить"
+msgstr "Delete"
+
+msgid "Записей пока нет."
+msgstr "No appointments yet."
+
+msgid "Создать первую запись"
+msgstr "Create first appointment"
+
+msgid "Быстрые действия"
+msgstr "Quick Actions"
+
+msgid "Управление услугами"
+msgstr "Manage Services"
+
+msgid "Управление сотрудниками"
+msgstr "Manage Employees"
+
+msgid "База клиентов"
+msgstr "Customer Database"
+
+msgid "Выберите клиента"
+msgstr "Select Customer"
+
+msgid "Отмена"
+msgstr "Cancel"
+
+msgid "Создать запись"
+msgstr "Create Appointment"
+
+#: admin/views/view-services.php
+msgid "Новая категория"
+msgstr "New Category"
+
+msgid "Новая услуга"
+msgstr "New Service"
+
+msgid "Категория"
+msgstr "Category"
+
+msgid "Все категории"
+msgstr "All Categories"
+
+msgid "Все статусы"
+msgstr "All Statuses"
+
+msgid "Активные"
+msgstr "Active"
+
+msgid "Неактивные"
+msgstr "Inactive"
+
+msgid "Применить"
+msgstr "Apply"
+
+msgid "Название"
+msgstr "Name"
+
+msgid "Продолжительность"
+msgstr "Duration"
+
+msgid "Цена"
+msgstr "Price"
+
+msgid "Без категории"
+msgstr "No Category"
+
+msgid "Бесплатно"
+msgstr "Free"
+
+msgid "Активна"
+msgstr "Active"
+
+msgid "Неактивна"
+msgstr "Inactive"
+
+msgid "Массовые действия:"
+msgstr "Bulk Actions:"
+
+msgid "Активировать"
+msgstr "Activate"
+
+msgid "Деактивировать"
+msgstr "Deactivate"
+
+msgid "Услуги не найдены."
+msgstr "No services found."
+
+msgid "Создать первую услугу"
+msgstr "Create first service"
+
+msgid "Описание"
+msgstr "Description"
+
+msgid "Продолжительность (мин.)"
+msgstr "Duration (min.)"
+
+msgid "Буферное время (мин.)"
+msgstr "Buffer time (min.)"
+
+msgid "Время между записями для подготовки"
+msgstr "Time between appointments for preparation"
+
+msgid "Цвет"
+msgstr "Color"
+
+msgid "Сохранить"
+msgstr "Save"
+
+msgid "Порядок сортировки"
+msgstr "Sort Order"
+
+#: admin/views/view-employees.php
+msgid "Новый сотрудник"
+msgstr "New Employee"
+
+msgid "Сотрудник"
+msgstr "Employee"
+
+msgid "Контакты"
+msgstr "Contacts"
+
+msgid "еще"
+msgstr "more"
+
+msgid "Нет услуг"
+msgstr "No Services"
+
+msgid "Активен"
+msgstr "Active"
+
+msgid "Неактивен"
+msgstr "Inactive"
+
+msgid "График"
+msgstr "Schedule"
+
+msgid "Сотрудники не найдены."
+msgstr "No employees found."
+
+msgid "Добавить первого сотрудника"
+msgstr "Add first employee"
+
+msgid "Имя"
+msgstr "Name"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Телефон"
+msgstr "Phone"
+
+msgid "График работы"
+msgstr "Work Schedule"
+
+msgid "Начало"
+msgstr "Start"
+
+msgid "Конец"
+msgstr "End"
+
+msgid "Перерыв с"
+msgstr "Break from"
+
+msgid "Перерыв до"
+msgstr "Break to"
+
+msgid "Сохранить график"
+msgstr "Save Schedule"
+
+#: admin/views/view-settings.php
+msgid "Настройки ChronoForge"
+msgstr "ChronoForge Settings"
+
+msgid "Общие настройки"
+msgstr "General Settings"
+
+msgid "Язык плагина"
+msgstr "Plugin Language"
+
+msgid "Автоматически (язык WordPress)"
+msgstr "Automatic (WordPress language)"
+
+msgid "Выберите язык интерфейса плагина"
+msgstr "Select plugin interface language"
+
+msgid "Валюта"
+msgstr "Currency"
+
+msgid "Символ валюты"
+msgstr "Currency Symbol"
+
+msgid "Формат даты"
+msgstr "Date Format"
+
+msgid "Формат времени"
+msgstr "Time Format"
+
+msgid "24-часовой (HH:MM)"
+msgstr "24-hour (HH:MM)"
+
+msgid "12-часовой (H:MM AM/PM)"
+msgstr "12-hour (H:MM AM/PM)"
+
+msgid "Минимальное время до записи (минут)"
+msgstr "Minimum booking time (minutes)"
+
+msgid "За сколько минут до текущего времени можно записаться"
+msgstr "How many minutes before current time booking is allowed"
+
+msgid "Максимальное время для записи (дней)"
+msgstr "Maximum booking time (days)"
+
+msgid "На сколько дней вперед можно записаться"
+msgstr "How many days ahead booking is allowed"
+
+msgid "Стилизация"
+msgstr "Styling"
+
+msgid "Основной цвет"
+msgstr "Primary Color"
+
+msgid "Дополнительный цвет"
+msgstr "Secondary Color"
+
+msgid "Стиль формы бронирования"
+msgstr "Booking Form Style"
+
+msgid "По умолчанию"
+msgstr "Default"
+
+msgid "Минималистичный"
+msgstr "Minimal"
+
+msgid "Современный"
+msgstr "Modern"
+
+msgid "Платежи"
+msgstr "Payments"
+
+msgid "Включить онлайн-платежи"
+msgstr "Enable online payments"
+
+msgid "Требовать оплату при бронировании"
+msgstr "Require payment when booking"
+
+msgid "Статус записи по умолчанию"
+msgstr "Default appointment status"
+
+msgid "Уведомления"
+msgstr "Notifications"
+
+msgid "Включить уведомления"
+msgstr "Enable notifications"
+
+msgid "Email-уведомления администратору"
+msgstr "Email notifications to admin"
+
+msgid "Email-уведомления клиентам"
+msgstr "Email notifications to customers"
+
+msgid "SMS-уведомления (требует настройки)"
+msgstr "SMS notifications (requires setup)"
+
+msgid "Дополнительные настройки"
+msgstr "Additional Settings"
+
+msgid "Email администратора для уведомлений"
+msgstr "Admin email for notifications"
+
+msgid "Название компании"
+msgstr "Company Name"
+
+msgid "Адрес компании"
+msgstr "Company Address"
+
+msgid "Телефон компании"
+msgstr "Company Phone"
+
+msgid "Email компании"
+msgstr "Company Email"
+
+msgid "Сохранить настройки"
+msgstr "Save Settings"
+
+msgid "Версия: %s"
+msgstr "Version: %s"
+
+msgid "Система управления бронированиями для WordPress"
+msgstr "Booking management system for WordPress"
+
+msgid "Документация"
+msgstr "Documentation"
+
+msgid "Поддержка"
+msgstr "Support"
+
+#: public/views/view-booking-form.php
+msgid "Записаться на услугу"
+msgstr "Book a Service"
+
+msgid "Выберите категорию услуг"
+msgstr "Select Service Category"
+
+msgid "Далее"
+msgstr "Next"
+
+msgid "Назад"
+msgstr "Back"
+
+msgid "Выберите дату и время"
+msgstr "Select Date and Time"
+
+msgid "Доступное время"
+msgstr "Available Times"
+
+msgid "Сначала выберите дату"
+msgstr "Please select a date first"
+
+msgid "Ваши контактные данные"
+msgstr "Your Contact Information"
+
+msgid "Фамилия"
+msgstr "Last Name"
+
+msgid "Комментарий"
+msgstr "Comment"
+
+msgid "Дополнительная информация или пожелания"
+msgstr "Additional information or requests"
+
+msgid "Записаться"
+msgstr "Book Appointment"
+
+#: public/views/view-customer-panel.php
+msgid "Личный кабинет"
+msgstr "Customer Panel"
+
+msgid "Добро пожаловать, %s!"
+msgstr "Welcome, %s!"
+
+msgid "Предстоящие записи"
+msgstr "Upcoming Appointments"
+
+msgid "Отменить запись"
+msgstr "Cancel Appointment"
+
+msgid "Перенести"
+msgstr "Reschedule"
+
+msgid "У вас нет предстоящих записей."
+msgstr "You have no upcoming appointments."
+
+msgid "История записей"
+msgstr "Appointment History"
+
+msgid "Стоимость"
+msgstr "Cost"
+
+msgid "У вас пока нет записей в истории."
+msgstr "You have no appointment history yet."
+
+msgid "Отмена записи"
+msgstr "Cancel Appointment"
+
+msgid "Вы уверены, что хотите отменить эту запись?"
+msgstr "Are you sure you want to cancel this appointment?"
+
+msgid "Нет, оставить"
+msgstr "No, keep it"
+
+msgid "Да, отменить"
+msgstr "Yes, cancel"
+
+msgid "Комментарий:"
+msgstr "Comment:"
