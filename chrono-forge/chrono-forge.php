@@ -70,6 +70,41 @@ register_activation_hook(__FILE__, 'activate_chrono_forge');
 register_deactivation_hook(__FILE__, 'deactivate_chrono_forge');
 
 /**
+ * Check for syntax errors in critical files
+ */
+function chrono_forge_check_syntax() {
+    $critical_files = array(
+        'includes/utils/functions.php',
+        'includes/class-chrono-forge-core.php',
+        'includes/class-chrono-forge-db-manager.php',
+        'includes/class-chrono-forge-ajax-handler.php',
+        'includes/class-chrono-forge-shortcodes.php',
+        'admin/class-chrono-forge-admin-menu.php'
+    );
+
+    foreach ($critical_files as $file) {
+        $file_path = CHRONO_FORGE_PLUGIN_DIR . $file;
+        if (file_exists($file_path)) {
+            $content = file_get_contents($file_path);
+
+            // Basic syntax checks
+            if (substr_count($content, '{') !== substr_count($content, '}')) {
+                error_log("ChronoForge Syntax Error: Mismatched braces in {$file}");
+                return false;
+            }
+
+            // Check for common syntax issues
+            if (preg_match('/\bpublic\s+function\s+\w+\([^)]*\)\s*[^{]/', $content)) {
+                error_log("ChronoForge Syntax Error: Possible missing opening brace in {$file}");
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+/**
  * Initialize the plugin safely
  */
 function chrono_forge_init_plugin() {
@@ -77,6 +112,13 @@ function chrono_forge_init_plugin() {
         // Check if WordPress is properly loaded
         if (!function_exists('add_action')) {
             error_log('ChronoForge: WordPress not properly loaded');
+            return null;
+        }
+
+        // Perform syntax check first
+        if (!chrono_forge_check_syntax()) {
+            error_log('ChronoForge: Syntax errors detected, aborting initialization');
+            add_action('admin_notices', 'chrono_forge_syntax_error_notice');
             return null;
         }
 
@@ -111,9 +153,12 @@ function chrono_forge_init_plugin() {
             add_action('admin_notices', 'chrono_forge_critical_error_notice');
             return null;
         }
+    } catch (ParseError $e) {
+        error_log('ChronoForge Parse Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
+        add_action('admin_notices', 'chrono_forge_syntax_error_notice');
+        return null;
     } catch (Exception $e) {
         error_log('ChronoForge Initialization Error: ' . $e->getMessage());
-        // Only add admin notice for critical errors that prevent plugin from working
         add_action('admin_notices', 'chrono_forge_critical_error_notice');
         return null;
     } catch (Error $e) {
@@ -165,6 +210,17 @@ function chrono_forge_critical_error_notice() {
     echo '<div class="notice notice-error"><p>';
     echo '<strong>ChronoForge Plugin Error:</strong> ';
     echo __('Плагин не может быть загружен из-за критической ошибки. Проверьте логи сервера для получения подробной информации.', 'chrono-forge');
+    echo '</p></div>';
+}
+
+/**
+ * Syntax error notice for admin
+ */
+function chrono_forge_syntax_error_notice() {
+    echo '<div class="notice notice-error"><p>';
+    echo '<strong>ChronoForge Syntax Error:</strong> ';
+    echo __('Обнаружены синтаксические ошибки в файлах плагина. Проверьте логи сервера для получения подробной информации.', 'chrono-forge');
+    echo ' <a href="' . admin_url('plugins.php') . '">' . __('Деактивировать плагин', 'chrono-forge') . '</a>';
     echo '</p></div>';
 }
 

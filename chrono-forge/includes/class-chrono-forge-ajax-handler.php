@@ -1168,18 +1168,13 @@ class ChronoForge_Ajax_Handler {
                 wp_send_json_error(__('Недостаточно прав доступа', 'chrono-forge'));
             }
 
-            // Get plugin instance and disable emergency mode
-            $plugin_instance = function_exists('chrono_forge') ? chrono_forge() : null;
-            if ($plugin_instance && method_exists($plugin_instance, 'disable_emergency_mode')) {
-                $result = $plugin_instance->disable_emergency_mode();
-                if ($result) {
-                    wp_send_json_success(__('Аварийный режим отключен', 'chrono-forge'));
-                } else {
-                    wp_send_json_error(__('Не удалось отключить аварийный режим', 'chrono-forge'));
-                }
-            } else {
-                wp_send_json_error(__('Плагин недоступен', 'chrono-forge'));
-            }
+            // Clear emergency mode options directly
+            delete_option('chrono_forge_emergency_mode');
+            delete_option('chrono_forge_emergency_error');
+            delete_option('chrono_forge_emergency_time');
+
+            chrono_forge_safe_log('Emergency mode disabled via AJAX', 'info');
+            wp_send_json_success(__('Аварийный режим отключен. Обновите страницу для применения изменений.', 'chrono-forge'));
 
         } catch (Exception $e) {
             chrono_forge_safe_log("Exception in disable_emergency_mode: " . $e->getMessage(), 'error');

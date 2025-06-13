@@ -501,6 +501,14 @@ class ChronoForge_Notification_Manager {
                     <p><strong>Дата:</strong> {appointment_date}</p>
                     <p><strong>Время:</strong> {appointment_time}</p>
                 </div>
+
+                <hr style="margin: 30px 0;">
+                <p style="font-size: 14px; color: #666;">
+                    С уважением,<br>
+                    {company_name}<br>
+                    {company_phone}<br>
+                    {company_email}
+                </p>
             </div>
         </body>
         </html>';

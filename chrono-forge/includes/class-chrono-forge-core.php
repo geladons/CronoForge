@@ -224,9 +224,6 @@ class ChronoForge_Core {
 
             // Skip system health check during initialization to avoid circular dependencies
 
-            // Add success notice for debugging
-            add_action('admin_notices', array($this, 'initialization_success_notice'));
-
         } catch (Exception $e) {
             chrono_forge_safe_log('Exception during component initialization: ' . $e->getMessage(), 'error');
             add_action('admin_notices', array($this, 'component_init_error_notice'));
