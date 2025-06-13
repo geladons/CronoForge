@@ -789,11 +789,13 @@ class ChronoForge_Core {
      */
     private function load_diagnostics_system() {
         try {
-            // Load diagnostic utility functions
+            // Load diagnostic utility functions first
             $diagnostic_functions_file = CHRONO_FORGE_PLUGIN_DIR . 'includes/utils/diagnostic-functions.php';
             if (file_exists($diagnostic_functions_file)) {
                 require_once $diagnostic_functions_file;
                 chrono_forge_safe_log("Loaded diagnostic utility functions", 'debug');
+            } else {
+                chrono_forge_safe_log("Diagnostic utility functions file not found: " . $diagnostic_functions_file, 'warning');
             }
 
             // Load diagnostics engine
@@ -801,11 +803,15 @@ class ChronoForge_Core {
             if (file_exists($diagnostics_file)) {
                 require_once $diagnostics_file;
 
-                // Initialize diagnostics
-                $this->diagnostics = ChronoForge_Diagnostics::instance();
-                chrono_forge_safe_log("Loaded diagnostics system", 'debug');
+                // Test if class can be instantiated
+                if (class_exists('ChronoForge_Diagnostics')) {
+                    $this->diagnostics = ChronoForge_Diagnostics::instance();
+                    chrono_forge_safe_log("Diagnostics system loaded and initialized", 'debug');
+                } else {
+                    chrono_forge_safe_log("ChronoForge_Diagnostics class not found after loading file", 'error');
+                }
             } else {
-                chrono_forge_safe_log("Diagnostics system file not found", 'warning');
+                chrono_forge_safe_log("Diagnostics system file not found: " . $diagnostics_file, 'warning');
             }
 
             // Load admin diagnostics interface
@@ -813,15 +819,47 @@ class ChronoForge_Core {
             if (file_exists($admin_diagnostics_file)) {
                 require_once $admin_diagnostics_file;
 
-                // Initialize admin diagnostics
-                $this->admin_diagnostics = ChronoForge_Admin_Diagnostics::instance();
-                chrono_forge_safe_log("Loaded admin diagnostics interface", 'debug');
+                // Test if class can be instantiated
+                if (class_exists('ChronoForge_Admin_Diagnostics')) {
+                    $this->admin_diagnostics = ChronoForge_Admin_Diagnostics::instance();
+                    chrono_forge_safe_log("Admin diagnostics interface loaded and initialized", 'debug');
+                } else {
+                    chrono_forge_safe_log("ChronoForge_Admin_Diagnostics class not found after loading file", 'error');
+                }
             } else {
-                chrono_forge_safe_log("Admin diagnostics interface file not found", 'warning');
+                chrono_forge_safe_log("Admin diagnostics interface file not found: " . $admin_diagnostics_file, 'warning');
+            }
+
+            // Add admin notice hook for diagnostic issues
+            if (!$this->diagnostics || !$this->admin_diagnostics) {
+                add_action('admin_notices', array($this, 'diagnostics_load_error_notice'));
             }
 
         } catch (Exception $e) {
-            chrono_forge_safe_log("Error loading diagnostics system: " . $e->getMessage(), 'error');
+            chrono_forge_safe_log("Exception loading diagnostics system: " . $e->getMessage(), 'error');
+            add_action('admin_notices', array($this, 'diagnostics_load_error_notice'));
+        } catch (Error $e) {
+            chrono_forge_safe_log("Fatal error loading diagnostics system: " . $e->getMessage(), 'error');
+            add_action('admin_notices', array($this, 'diagnostics_load_error_notice'));
         }
+    }
+
+    /**
+     * Show notice when diagnostics system fails to load
+     *
+     * @since 1.0.0
+     * @return void
+     */
+    public function diagnostics_load_error_notice() {
+        // Only show on ChronoForge pages
+        if (!isset($_GET['page']) || strpos($_GET['page'], 'chrono-forge') !== 0) {
+            return;
+        }
+
+        echo '<div class="notice notice-warning is-dismissible">';
+        echo '<p><strong>' . __('ChronoForge Diagnostics Warning', 'chrono-forge') . '</strong></p>';
+        echo '<p>' . __('The diagnostic system could not be fully loaded. Basic functionality is available, but advanced diagnostics may not work.', 'chrono-forge') . '</p>';
+        echo '<p>' . __('Check the error logs for more details.', 'chrono-forge') . '</p>';
+        echo '</div>';
     }
 }

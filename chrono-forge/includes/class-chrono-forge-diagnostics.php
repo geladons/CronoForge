@@ -180,14 +180,31 @@ class ChronoForge_Diagnostics {
                 continue;
             }
 
-            // Check syntax using PHP's built-in syntax checker
-            $output = array();
-            $return_var = 0;
-            $command = sprintf('php -l %s 2>&1', escapeshellarg($file_path));
-            exec($command, $output, $return_var);
+            // Check syntax using PHP's built-in syntax checker (if available)
+            // First try to use php -l if exec is available
+            if (function_exists('exec')) {
+                $output = array();
+                $return_var = 0;
+                $command = sprintf('php -l %s 2>&1', escapeshellarg($file_path));
+                @exec($command, $output, $return_var);
 
-            if ($return_var !== 0) {
-                $syntax_errors[] = sprintf(__('Syntax error in %s: %s', 'chrono-forge'), $file, implode(' ', $output));
+                if ($return_var !== 0) {
+                    $syntax_errors[] = sprintf(__('Syntax error in %s: %s', 'chrono-forge'), $file, implode(' ', $output));
+                    continue;
+                }
+            }
+
+            // Fallback: Basic syntax checks
+            $content = file_get_contents($file_path);
+            if ($content === false) {
+                $syntax_errors[] = sprintf(__('Cannot read file: %s', 'chrono-forge'), $file);
+                continue;
+            }
+
+            // Basic syntax validation
+            $basic_checks = $this->perform_basic_syntax_checks($content, $file);
+            if (!empty($basic_checks)) {
+                $syntax_errors = array_merge($syntax_errors, $basic_checks);
             }
         }
 
@@ -222,8 +239,72 @@ class ChronoForge_Diagnostics {
             'includes/utils/functions.php',
             'admin/class-chrono-forge-admin-menu.php',
             'admin/class-chrono-forge-admin-ajax.php',
-            'public/class-chrono-forge-public.php'
+            'public/class-chrono-forge-public.php',
+            'includes/class-chrono-forge-diagnostics.php',
+            'admin/class-chrono-forge-admin-diagnostics.php'
         );
+    }
+
+    /**
+     * Perform basic syntax checks on PHP content
+     *
+     * @param string $content PHP file content
+     * @param string $filename Filename for error reporting
+     * @return array Array of syntax errors found
+     */
+    private function perform_basic_syntax_checks($content, $filename) {
+        $errors = array();
+
+        // Check for basic PHP syntax issues
+        if (strpos($content, '<?php') === false && strpos($content, '<?') === false) {
+            $errors[] = sprintf(__('File %s does not appear to be a PHP file', 'chrono-forge'), $filename);
+            return $errors;
+        }
+
+        // Check for unmatched braces
+        $open_braces = substr_count($content, '{');
+        $close_braces = substr_count($content, '}');
+        if ($open_braces !== $close_braces) {
+            $errors[] = sprintf(__('Unmatched braces in %s (open: %d, close: %d)', 'chrono-forge'), $filename, $open_braces, $close_braces);
+        }
+
+        // Check for unmatched parentheses
+        $open_parens = substr_count($content, '(');
+        $close_parens = substr_count($content, ')');
+        if ($open_parens !== $close_parens) {
+            $errors[] = sprintf(__('Unmatched parentheses in %s (open: %d, close: %d)', 'chrono-forge'), $filename, $open_parens, $close_parens);
+        }
+
+        // Check for common syntax errors
+        $lines = explode("\n", $content);
+        foreach ($lines as $line_num => $line) {
+            $line_num++; // 1-based line numbers
+            $trimmed = trim($line);
+
+            // Skip empty lines and comments
+            if (empty($trimmed) || strpos($trimmed, '//') === 0 || strpos($trimmed, '#') === 0) {
+                continue;
+            }
+
+            // Check for missing semicolons (basic check)
+            if (preg_match('/^\s*(return|echo|print|throw|break|continue)\s+[^;]+[^;}]$/', $trimmed)) {
+                $errors[] = sprintf(__('Possible missing semicolon in %s at line %d', 'chrono-forge'), $filename, $line_num);
+            }
+
+            // Check for unclosed strings (basic check)
+            $single_quotes = substr_count($line, "'") - substr_count($line, "\\'");
+            $double_quotes = substr_count($line, '"') - substr_count($line, '\\"');
+
+            if ($single_quotes % 2 !== 0) {
+                $errors[] = sprintf(__('Possible unclosed single quote in %s at line %d', 'chrono-forge'), $filename, $line_num);
+            }
+
+            if ($double_quotes % 2 !== 0) {
+                $errors[] = sprintf(__('Possible unclosed double quote in %s at line %d', 'chrono-forge'), $filename, $line_num);
+            }
+        }
+
+        return $errors;
     }
 
     /**

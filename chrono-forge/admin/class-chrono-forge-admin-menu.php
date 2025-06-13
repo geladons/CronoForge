@@ -122,14 +122,14 @@ class ChronoForge_Admin_Menu {
             array($this, 'settings_page')
         );
 
-        // Подменю - Диагностика
+        // Подменю - Диагностика (независимая от DB менеджера)
         add_submenu_page(
             'chrono-forge',
             __('Диагностика', 'chrono-forge'),
             __('Диагностика', 'chrono-forge'),
             'manage_options',
             'chrono-forge-diagnostics',
-            array($this, 'diagnostics_page')
+            'chrono_forge_standalone_diagnostics_page'
         );
     }
 
@@ -665,15 +665,116 @@ class ChronoForge_Admin_Menu {
      * Страница диагностики
      */
     public function diagnostics_page() {
-        // Load diagnostics classes if not already loaded
-        if (!class_exists('ChronoForge_Diagnostics')) {
-            require_once CHRONO_FORGE_PLUGIN_DIR . 'includes/class-chrono-forge-diagnostics.php';
-        }
-        if (!class_exists('ChronoForge_Admin_Diagnostics')) {
-            require_once CHRONO_FORGE_PLUGIN_DIR . 'admin/class-chrono-forge-admin-diagnostics.php';
+        // Check permissions first
+        if (!current_user_can('manage_options')) {
+            wp_die(__('У вас недостаточно прав для доступа к этой странице.', 'chrono-forge'));
         }
 
-        $admin_diagnostics = ChronoForge_Admin_Diagnostics::instance();
-        $admin_diagnostics->render_diagnostics_page();
+        try {
+            // Load diagnostics classes if not already loaded
+            if (!class_exists('ChronoForge_Diagnostics')) {
+                $diagnostics_file = CHRONO_FORGE_PLUGIN_DIR . 'includes/class-chrono-forge-diagnostics.php';
+                if (file_exists($diagnostics_file)) {
+                    require_once $diagnostics_file;
+                } else {
+                    throw new Exception('Diagnostics class file not found');
+                }
+            }
+
+            if (!class_exists('ChronoForge_Admin_Diagnostics')) {
+                $admin_diagnostics_file = CHRONO_FORGE_PLUGIN_DIR . 'admin/class-chrono-forge-admin-diagnostics.php';
+                if (file_exists($admin_diagnostics_file)) {
+                    require_once $admin_diagnostics_file;
+                } else {
+                    throw new Exception('Admin diagnostics class file not found');
+                }
+            }
+
+            $admin_diagnostics = ChronoForge_Admin_Diagnostics::instance();
+            $admin_diagnostics->render_diagnostics_page();
+
+        } catch (Exception $e) {
+            // Fallback diagnostic page
+            $this->render_fallback_diagnostics_page($e);
+        }
+    }
+
+    /**
+     * Render fallback diagnostics page when main system fails
+     */
+    private function render_fallback_diagnostics_page($error = null) {
+        echo '<div class="wrap">';
+        echo '<h1>' . __('ChronoForge Diagnostics (Fallback Mode)', 'chrono-forge') . '</h1>';
+
+        if ($error) {
+            echo '<div class="notice notice-error"><p>';
+            echo '<strong>' . __('Diagnostic System Error:', 'chrono-forge') . '</strong> ';
+            echo esc_html($error->getMessage());
+            echo '</p></div>';
+        }
+
+        echo '<div class="notice notice-warning"><p>';
+        echo __('The main diagnostic system could not be loaded. Running basic diagnostics...', 'chrono-forge');
+        echo '</p></div>';
+
+        // Basic file check
+        echo '<h2>' . __('Basic File Integrity Check', 'chrono-forge') . '</h2>';
+        echo '<table class="widefat">';
+        echo '<thead><tr><th>' . __('File', 'chrono-forge') . '</th><th>' . __('Status', 'chrono-forge') . '</th></tr></thead>';
+        echo '<tbody>';
+
+        $critical_files = array(
+            'chrono-forge.php' => 'Main plugin file',
+            'includes/class-chrono-forge-core.php' => 'Core class',
+            'includes/utils/functions.php' => 'Utility functions',
+            'admin/class-chrono-forge-admin-menu.php' => 'Admin menu',
+            'includes/class-chrono-forge-diagnostics.php' => 'Diagnostics system',
+            'admin/class-chrono-forge-admin-diagnostics.php' => 'Admin diagnostics'
+        );
+
+        foreach ($critical_files as $file => $description) {
+            $file_path = CHRONO_FORGE_PLUGIN_DIR . $file;
+            $exists = file_exists($file_path);
+            $readable = $exists && is_readable($file_path);
+
+            echo '<tr>';
+            echo '<td>' . esc_html($file) . '<br><small>' . esc_html($description) . '</small></td>';
+            echo '<td>';
+            if ($exists && $readable) {
+                echo '<span style="color: green;">✓ ' . __('OK', 'chrono-forge') . '</span>';
+            } elseif ($exists) {
+                echo '<span style="color: orange;">⚠ ' . __('Not readable', 'chrono-forge') . '</span>';
+            } else {
+                echo '<span style="color: red;">✗ ' . __('Missing', 'chrono-forge') . '</span>';
+            }
+            echo '</td>';
+            echo '</tr>';
+        }
+
+        echo '</tbody></table>';
+
+        // Basic system info
+        echo '<h2>' . __('System Information', 'chrono-forge') . '</h2>';
+        echo '<table class="widefat">';
+        echo '<tbody>';
+        echo '<tr><td>' . __('Plugin Version', 'chrono-forge') . '</td><td>' . CHRONO_FORGE_VERSION . '</td></tr>';
+        echo '<tr><td>' . __('WordPress Version', 'chrono-forge') . '</td><td>' . get_bloginfo('version') . '</td></tr>';
+        echo '<tr><td>' . __('PHP Version', 'chrono-forge') . '</td><td>' . PHP_VERSION . '</td></tr>';
+        echo '<tr><td>' . __('Plugin Directory', 'chrono-forge') . '</td><td>' . CHRONO_FORGE_PLUGIN_DIR . '</td></tr>';
+        echo '<tr><td>' . __('Current User', 'chrono-forge') . '</td><td>' . wp_get_current_user()->user_login . ' (ID: ' . get_current_user_id() . ')</td></tr>';
+        echo '<tr><td>' . __('User Capabilities', 'chrono-forge') . '</td><td>' . (current_user_can('manage_options') ? __('Has manage_options', 'chrono-forge') : __('Missing manage_options', 'chrono-forge')) . '</td></tr>';
+        echo '</tbody></table>';
+
+        // Recovery suggestions
+        echo '<h2>' . __('Recovery Suggestions', 'chrono-forge') . '</h2>';
+        echo '<ul>';
+        echo '<li>' . __('Check that all plugin files are properly uploaded', 'chrono-forge') . '</li>';
+        echo '<li>' . __('Verify file permissions on the plugin directory', 'chrono-forge') . '</li>';
+        echo '<li>' . __('Try deactivating and reactivating the plugin', 'chrono-forge') . '</li>';
+        echo '<li>' . __('Check the WordPress error logs for detailed error messages', 'chrono-forge') . '</li>';
+        echo '<li>' . __('Contact support if the issue persists', 'chrono-forge') . '</li>';
+        echo '</ul>';
+
+        echo '</div>';
     }
 }

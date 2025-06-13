@@ -146,16 +146,46 @@ class ChronoForge_Admin_Diagnostics {
      * Render diagnostics page
      */
     public function render_diagnostics_page() {
-        // Check permissions
+        // Check permissions with more detailed error
         if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'chrono-forge'));
+            $current_user = wp_get_current_user();
+            $error_message = sprintf(
+                __('Access denied. User %s (ID: %d) does not have sufficient permissions to access this page. Required capability: manage_options', 'chrono-forge'),
+                $current_user->user_login,
+                $current_user->ID
+            );
+            wp_die($error_message);
         }
 
-        $results = $this->diagnostics->run_diagnostics();
-        $system_info = $this->diagnostics->get_system_info();
-        $recent_logs = $this->diagnostics->get_recent_error_logs(20);
+        try {
+            // Initialize diagnostics if not already done
+            if (!$this->diagnostics) {
+                $this->diagnostics = ChronoForge_Diagnostics::instance();
+            }
 
-        include CHRONO_FORGE_PLUGIN_DIR . 'admin/views/view-diagnostics.php';
+            $results = $this->diagnostics->run_diagnostics();
+            $system_info = $this->diagnostics->get_system_info();
+            $recent_logs = $this->diagnostics->get_recent_error_logs(20);
+
+            // Check if view file exists
+            $view_file = CHRONO_FORGE_PLUGIN_DIR . 'admin/views/view-diagnostics.php';
+            if (file_exists($view_file)) {
+                include $view_file;
+            } else {
+                echo '<div class="wrap">';
+                echo '<h1>' . __('ChronoForge Diagnostics', 'chrono-forge') . '</h1>';
+                echo '<div class="notice notice-error"><p>' . sprintf(__('Diagnostics view file not found: %s', 'chrono-forge'), $view_file) . '</p></div>';
+                echo '<p>' . __('Please check that all plugin files are properly installed.', 'chrono-forge') . '</p>';
+                echo '</div>';
+            }
+
+        } catch (Exception $e) {
+            echo '<div class="wrap">';
+            echo '<h1>' . __('ChronoForge Diagnostics', 'chrono-forge') . '</h1>';
+            echo '<div class="notice notice-error"><p>' . sprintf(__('Error loading diagnostics: %s', 'chrono-forge'), $e->getMessage()) . '</p></div>';
+            echo '<p>' . __('Please check the server error logs for more details.', 'chrono-forge') . '</p>';
+            echo '</div>';
+        }
     }
 
     /**
