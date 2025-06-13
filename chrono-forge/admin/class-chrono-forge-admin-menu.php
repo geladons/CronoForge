@@ -127,8 +127,13 @@ class ChronoForge_Admin_Menu {
      * Обработка действий в админ-панели
      */
     public function handle_admin_actions() {
+        // Only handle actions on our plugin pages
+        if (empty($_GET['page']) || strpos($_GET['page'], 'chrono-forge') !== 0) {
+            return;
+        }
+
         // Проверяем права доступа
-        if (!chrono_forge_check_admin_permissions()) {
+        if (!current_user_can('manage_options')) {
             return;
         }
 
@@ -274,9 +279,23 @@ class ChronoForge_Admin_Menu {
      * Страница настроек
      */
     public function settings_page() {
+        // Check permissions directly here
+        if (!current_user_can('manage_options')) {
+            wp_die(__('У вас недостаточно прав для доступа к этой странице.', 'chrono-forge'));
+        }
+
         $settings = get_option('chrono_forge_settings', array());
-        
-        include CHRONO_FORGE_PLUGIN_DIR . 'admin/views/view-settings.php';
+
+        // Check if settings view file exists
+        $settings_view = CHRONO_FORGE_PLUGIN_DIR . 'admin/views/view-settings.php';
+        if (file_exists($settings_view)) {
+            include $settings_view;
+        } else {
+            echo '<div class="wrap">';
+            echo '<h1>' . __('Настройки ChronoForge', 'chrono-forge') . '</h1>';
+            echo '<div class="notice notice-error"><p>' . __('Файл настроек не найден.', 'chrono-forge') . '</p></div>';
+            echo '</div>';
+        }
     }
 
     /**

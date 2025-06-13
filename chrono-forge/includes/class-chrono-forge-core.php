@@ -124,19 +124,8 @@ class ChronoForge_Core {
      * Загрузка зависимостей
      */
     private function load_dependencies() {
-        // Подключение основных классов
-        require_once CHRONO_FORGE_PLUGIN_DIR . 'includes/class-chrono-forge-db-manager.php';
-        require_once CHRONO_FORGE_PLUGIN_DIR . 'includes/class-chrono-forge-ajax-handler.php';
-        require_once CHRONO_FORGE_PLUGIN_DIR . 'includes/class-chrono-forge-shortcodes.php';
-        require_once CHRONO_FORGE_PLUGIN_DIR . 'includes/class-chrono-forge-payment-manager.php';
-        require_once CHRONO_FORGE_PLUGIN_DIR . 'includes/class-chrono-forge-notification-manager.php';
-        require_once CHRONO_FORGE_PLUGIN_DIR . 'includes/class-chrono-forge-calendar-integration.php';
-        require_once CHRONO_FORGE_PLUGIN_DIR . 'includes/utils/functions.php';
-        
-        // Подключение админ-классов только в админке
-        if (is_admin()) {
-            require_once CHRONO_FORGE_PLUGIN_DIR . 'admin/class-chrono-forge-admin-menu.php';
-        }
+        // Load utility functions first (already loaded in main plugin file)
+        // Other classes will be loaded in load_required_classes() method
     }
 
     /**
@@ -147,74 +136,96 @@ class ChronoForge_Core {
      */
     private function init_components() {
         try {
+            // Load all required class files first
+            $this->load_required_classes();
+
             // Инициализация менеджера БД
             if (class_exists('ChronoForge_DB_Manager')) {
                 $this->db_manager = new ChronoForge_DB_Manager();
-                if (function_exists('chrono_forge_log')) {
-                    chrono_forge_log('Database manager initialized successfully', 'info');
-                } else {
-                    chrono_forge_safe_log('Database manager initialized successfully', 'info');
-                }
+                chrono_forge_safe_log('Database manager initialized successfully', 'info');
             } else {
-                if (function_exists('chrono_forge_log')) {
-                    chrono_forge_log('ChronoForge_DB_Manager class not found', 'error');
-                } else {
-                    chrono_forge_safe_log('ChronoForge_DB_Manager class not found', 'error');
-                }
-                return;
+                chrono_forge_safe_log('ChronoForge_DB_Manager class not found after loading', 'error');
+                // Don't return here - continue with other components
             }
 
             // Инициализация AJAX-обработчика
-            if (class_exists('ChronoForge_Ajax_Handler')) {
-                $this->ajax_handler = new ChronoForge_Ajax_Handler($this->db_manager);
-                chrono_forge_safe_log('AJAX handler initialized successfully', 'info');
+            if (class_exists('ChronoForge_Ajax_Handler') && $this->db_manager) {
+                try {
+                    $this->ajax_handler = new ChronoForge_Ajax_Handler($this->db_manager);
+                    chrono_forge_safe_log('AJAX handler initialized successfully', 'info');
+                } catch (Exception $e) {
+                    chrono_forge_safe_log('Error initializing AJAX handler: ' . $e->getMessage(), 'error');
+                }
             } else {
-                chrono_forge_safe_log('ChronoForge_Ajax_Handler class not found', 'error');
+                chrono_forge_safe_log('ChronoForge_Ajax_Handler class not found or DB manager unavailable', 'warning');
             }
 
             // Инициализация шорткодов
-            if (class_exists('ChronoForge_Shortcodes')) {
-                $this->shortcodes = new ChronoForge_Shortcodes($this->db_manager);
-                chrono_forge_safe_log('Shortcodes initialized successfully', 'info');
+            if (class_exists('ChronoForge_Shortcodes') && $this->db_manager) {
+                try {
+                    $this->shortcodes = new ChronoForge_Shortcodes($this->db_manager);
+                    chrono_forge_safe_log('Shortcodes initialized successfully', 'info');
+                } catch (Exception $e) {
+                    chrono_forge_safe_log('Error initializing shortcodes: ' . $e->getMessage(), 'error');
+                }
             } else {
-                chrono_forge_safe_log('ChronoForge_Shortcodes class not found', 'error');
+                chrono_forge_safe_log('ChronoForge_Shortcodes class not found or DB manager unavailable', 'warning');
             }
 
             // Инициализация менеджера платежей
-            if (class_exists('ChronoForge_Payment_Manager')) {
-                $this->payment_manager = new ChronoForge_Payment_Manager($this->db_manager);
-                chrono_forge_safe_log('Payment manager initialized successfully', 'info');
+            if (class_exists('ChronoForge_Payment_Manager') && $this->db_manager) {
+                try {
+                    $this->payment_manager = new ChronoForge_Payment_Manager($this->db_manager);
+                    chrono_forge_safe_log('Payment manager initialized successfully', 'info');
+                } catch (Exception $e) {
+                    chrono_forge_safe_log('Error initializing payment manager: ' . $e->getMessage(), 'warning');
+                }
             } else {
-                chrono_forge_safe_log('ChronoForge_Payment_Manager class not found', 'warning');
+                chrono_forge_safe_log('ChronoForge_Payment_Manager class not found or DB manager unavailable', 'warning');
             }
 
             // Инициализация менеджера уведомлений
-            if (class_exists('ChronoForge_Notification_Manager')) {
-                $this->notification_manager = new ChronoForge_Notification_Manager($this->db_manager);
-                chrono_forge_safe_log('Notification manager initialized successfully', 'info');
+            if (class_exists('ChronoForge_Notification_Manager') && $this->db_manager) {
+                try {
+                    $this->notification_manager = new ChronoForge_Notification_Manager($this->db_manager);
+                    chrono_forge_safe_log('Notification manager initialized successfully', 'info');
+                } catch (Exception $e) {
+                    chrono_forge_safe_log('Error initializing notification manager: ' . $e->getMessage(), 'warning');
+                }
             } else {
-                chrono_forge_safe_log('ChronoForge_Notification_Manager class not found', 'warning');
+                chrono_forge_safe_log('ChronoForge_Notification_Manager class not found or DB manager unavailable', 'warning');
             }
 
             // Инициализация интеграции с календарями
-            if (class_exists('ChronoForge_Calendar_Integration')) {
-                $this->calendar_integration = new ChronoForge_Calendar_Integration($this->db_manager);
-                chrono_forge_safe_log('Calendar integration initialized successfully', 'info');
+            if (class_exists('ChronoForge_Calendar_Integration') && $this->db_manager) {
+                try {
+                    $this->calendar_integration = new ChronoForge_Calendar_Integration($this->db_manager);
+                    chrono_forge_safe_log('Calendar integration initialized successfully', 'info');
+                } catch (Exception $e) {
+                    chrono_forge_safe_log('Error initializing calendar integration: ' . $e->getMessage(), 'warning');
+                }
             } else {
-                chrono_forge_safe_log('ChronoForge_Calendar_Integration class not found', 'warning');
+                chrono_forge_safe_log('ChronoForge_Calendar_Integration class not found or DB manager unavailable', 'warning');
             }
 
             // Инициализация админ-меню только в админке
             if (is_admin()) {
-                if (class_exists('ChronoForge_Admin_Menu')) {
-                    $this->admin_menu = new ChronoForge_Admin_Menu($this->db_manager);
-                    chrono_forge_safe_log('Admin menu initialized successfully', 'info');
+                if (class_exists('ChronoForge_Admin_Menu') && $this->db_manager) {
+                    try {
+                        $this->admin_menu = new ChronoForge_Admin_Menu($this->db_manager);
+                        chrono_forge_safe_log('Admin menu initialized successfully', 'info');
+                    } catch (Exception $e) {
+                        chrono_forge_safe_log('Error initializing admin menu: ' . $e->getMessage(), 'error');
+                    }
                 } else {
-                    chrono_forge_safe_log('ChronoForge_Admin_Menu class not found', 'error');
+                    chrono_forge_safe_log('ChronoForge_Admin_Menu class not found or DB manager unavailable', 'warning');
                 }
             }
 
             // Skip system health check during initialization to avoid circular dependencies
+
+            // Add success notice for debugging
+            add_action('admin_notices', array($this, 'initialization_success_notice'));
 
         } catch (Exception $e) {
             chrono_forge_safe_log('Exception during component initialization: ' . $e->getMessage(), 'error');
@@ -228,6 +239,44 @@ class ChronoForge_Core {
 
             // Emergency mode - disable problematic components
             $this->enable_emergency_mode($e->getMessage());
+        }
+    }
+
+    /**
+     * Load all required class files
+     *
+     * @since 1.0.0
+     * @return void
+     */
+    private function load_required_classes() {
+        $class_files = array(
+            'class-chrono-forge-db-manager.php',
+            'class-chrono-forge-ajax-handler.php',
+            'class-chrono-forge-shortcodes.php',
+            'class-chrono-forge-payment-manager.php',
+            'class-chrono-forge-notification-manager.php',
+            'class-chrono-forge-calendar-integration.php'
+        );
+
+        foreach ($class_files as $file) {
+            $file_path = CHRONO_FORGE_PLUGIN_DIR . 'includes/' . $file;
+            if (file_exists($file_path)) {
+                require_once $file_path;
+                chrono_forge_safe_log("Loaded class file: {$file}", 'debug');
+            } else {
+                chrono_forge_safe_log("Class file not found: {$file}", 'warning');
+            }
+        }
+
+        // Load admin menu class if in admin
+        if (is_admin()) {
+            $admin_file = CHRONO_FORGE_PLUGIN_DIR . 'admin/class-chrono-forge-admin-menu.php';
+            if (file_exists($admin_file)) {
+                require_once $admin_file;
+                chrono_forge_safe_log("Loaded admin menu class", 'debug');
+            } else {
+                chrono_forge_safe_log("Admin menu class file not found", 'warning');
+            }
         }
     }
 
@@ -527,6 +576,32 @@ class ChronoForge_Core {
         echo '<div class="notice notice-error"><p>';
         echo __('ChronoForge: Произошла ошибка при инициализации компонентов плагина. Проверьте логи для получения подробной информации.', 'chrono-forge');
         echo '</p></div>';
+    }
+
+    /**
+     * Уведомление об успешной инициализации (временное для отладки)
+     *
+     * @since 1.0.0
+     * @return void
+     */
+    public function initialization_success_notice() {
+        // Only show this notice on plugin pages or if there were previous errors
+        if (isset($_GET['page']) && strpos($_GET['page'], 'chrono-forge') === 0) {
+            $components_status = array(
+                'DB Manager' => $this->db_manager !== null ? '✓' : '✗',
+                'AJAX Handler' => $this->ajax_handler !== null ? '✓' : '✗',
+                'Shortcodes' => $this->shortcodes !== null ? '✓' : '✗',
+                'Admin Menu' => $this->admin_menu !== null ? '✓' : '✗'
+            );
+
+            echo '<div class="notice notice-success is-dismissible"><p>';
+            echo '<strong>ChronoForge:</strong> ' . __('Плагин успешно инициализирован.', 'chrono-forge') . ' ';
+            echo __('Компоненты:', 'chrono-forge') . ' ';
+            foreach ($components_status as $component => $status) {
+                echo $component . ': ' . $status . ' ';
+            }
+            echo '</p></div>';
+        }
     }
 
     /**

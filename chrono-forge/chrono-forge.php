@@ -98,14 +98,22 @@ function chrono_forge_init_plugin() {
 
         // Check if class exists before instantiating
         if (class_exists('ChronoForge_Core')) {
-            return ChronoForge_Core::instance();
+            $instance = ChronoForge_Core::instance();
+            if ($instance) {
+                return $instance;
+            } else {
+                error_log('ChronoForge: Failed to create core instance');
+                add_action('admin_notices', 'chrono_forge_critical_error_notice');
+                return null;
+            }
         } else {
             error_log('ChronoForge: Core class not found after loading');
+            add_action('admin_notices', 'chrono_forge_critical_error_notice');
             return null;
         }
     } catch (Exception $e) {
         error_log('ChronoForge Initialization Error: ' . $e->getMessage());
-        // Add admin notice for critical errors
+        // Only add admin notice for critical errors that prevent plugin from working
         add_action('admin_notices', 'chrono_forge_critical_error_notice');
         return null;
     } catch (Error $e) {
@@ -124,8 +132,30 @@ function chrono_forge() {
     static $instance = null;
     if ($instance === null) {
         $instance = chrono_forge_init_plugin();
+
+        // Debug: Log successful initialization
+        if ($instance) {
+            error_log('ChronoForge: Plugin initialized successfully');
+        } else {
+            error_log('ChronoForge: Plugin initialization failed');
+        }
     }
     return $instance;
+}
+
+/**
+ * Debug function to check plugin status
+ */
+function chrono_forge_debug_status() {
+    $plugin = chrono_forge();
+    if ($plugin) {
+        $status = $plugin->get_plugin_status();
+        error_log('ChronoForge Debug Status: ' . print_r($status, true));
+        return $status;
+    } else {
+        error_log('ChronoForge Debug: Plugin instance not available');
+        return false;
+    }
 }
 
 /**
