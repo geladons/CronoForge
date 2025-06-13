@@ -20,6 +20,20 @@ class ChronoForge_Activator {
     public static function activate() {
         global $wpdb;
 
+        // Включаем отображение ошибок для отладки
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            ini_set('display_errors', 1);
+            error_reporting(E_ALL);
+        }
+
+        chrono_forge_safe_log("Starting plugin activation", 'info');
+
+        // Проверка минимальных требований
+        if (!self::check_requirements()) {
+            chrono_forge_safe_log("Requirements check failed", 'error');
+            return;
+        }
+
         // Получаем префикс таблиц WordPress
         $table_prefix = $wpdb->prefix;
 
@@ -190,10 +204,10 @@ class ChronoForge_Activator {
             foreach ($tables as $table_name => $sql) {
                 $result = dbDelta($sql);
                 if (!empty($wpdb->last_error)) {
-                    error_log("ChronoForge: Error creating table {$table_name}: " . $wpdb->last_error);
+                    chrono_forge_safe_log("Error creating table {$table_name}: " . $wpdb->last_error, 'error');
                 } else {
                     $tables_created[] = $table_name;
-                    error_log("ChronoForge: Successfully created/updated table {$table_name}");
+                    chrono_forge_safe_log("Successfully created/updated table {$table_name}", 'info');
                 }
             }
 
@@ -211,10 +225,10 @@ class ChronoForge_Activator {
             // Создание базовых данных
             self::create_sample_data();
 
-            error_log("ChronoForge: Plugin activation completed successfully");
+            chrono_forge_safe_log("Plugin activation completed successfully", 'info');
 
         } catch (Exception $e) {
-            error_log("ChronoForge: Activation error: " . $e->getMessage());
+            chrono_forge_safe_log("Activation error: " . $e->getMessage(), 'error');
             // Не прерываем активацию, но логируем ошибку
         }
     }
@@ -290,7 +304,7 @@ class ChronoForge_Activator {
         foreach ($indexes as $index_sql) {
             $wpdb->query($index_sql);
             if (!empty($wpdb->last_error)) {
-                error_log("ChronoForge: Error creating index: " . $wpdb->last_error);
+                chrono_forge_safe_log("Error creating index: " . $wpdb->last_error, 'error');
             }
         }
     }
@@ -348,10 +362,72 @@ class ChronoForge_Activator {
                 $wpdb->insert($table_prefix . 'services', $service);
             }
 
-            error_log("ChronoForge: Sample data created successfully");
+            chrono_forge_safe_log("Sample data created successfully", 'info');
 
         } catch (Exception $e) {
-            error_log("ChronoForge: Error creating sample data: " . $e->getMessage());
+            chrono_forge_safe_log("Error creating sample data: " . $e->getMessage(), 'error');
         }
+    }
+
+    /**
+     * Проверка минимальных требований системы
+     *
+     * @since 1.0.0
+     * @return bool True если все требования выполнены
+     */
+    private static function check_requirements() {
+        // Проверка версии PHP
+        if (version_compare(PHP_VERSION, '7.4', '<')) {
+            chrono_forge_safe_log("PHP version " . PHP_VERSION . " is too old. Required: 7.4+", 'error');
+            add_action('admin_notices', function() {
+                echo '<div class="notice notice-error"><p>';
+                echo sprintf(__('ChronoForge требует PHP версии 7.4 или выше. Ваша версия: %s', 'chrono-forge'), PHP_VERSION);
+                echo '</p></div>';
+            });
+            return false;
+        }
+
+        // Проверка версии WordPress
+        global $wp_version;
+        if (version_compare($wp_version, '5.0', '<')) {
+            chrono_forge_safe_log("WordPress version " . $wp_version . " is too old. Required: 5.0+", 'error');
+            add_action('admin_notices', function() use ($wp_version) {
+                echo '<div class="notice notice-error"><p>';
+                echo sprintf(__('ChronoForge требует WordPress версии 5.0 или выше. Ваша версия: %s', 'chrono-forge'), $wp_version);
+                echo '</p></div>';
+            });
+            return false;
+        }
+
+        // Проверка доступности MySQL
+        global $wpdb;
+        if (!$wpdb || !$wpdb->db_connect()) {
+            chrono_forge_safe_log("Database connection failed", 'error');
+            add_action('admin_notices', function() {
+                echo '<div class="notice notice-error"><p>';
+                echo __('ChronoForge: Не удается подключиться к базе данных', 'chrono-forge');
+                echo '</p></div>';
+            });
+            return false;
+        }
+
+        // Проверка прав на создание таблиц
+        $test_table = $wpdb->prefix . 'chrono_forge_test_' . time();
+        $result = $wpdb->query("CREATE TABLE {$test_table} (id INT AUTO_INCREMENT PRIMARY KEY)");
+        if ($result === false) {
+            chrono_forge_safe_log("Cannot create database tables. Check permissions.", 'error');
+            add_action('admin_notices', function() {
+                echo '<div class="notice notice-error"><p>';
+                echo __('ChronoForge: Недостаточно прав для создания таблиц в базе данных', 'chrono-forge');
+                echo '</p></div>';
+            });
+            return false;
+        } else {
+            // Удаляем тестовую таблицу
+            $wpdb->query("DROP TABLE IF EXISTS {$test_table}");
+        }
+
+        chrono_forge_safe_log("All system requirements met", 'info');
+        return true;
     }
 }

@@ -9,6 +9,23 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Safe logging function that works during activation
+ *
+ * @since 1.0.0
+ * @param string $message Message to log
+ * @param string $level Log level
+ * @return void
+ */
+if (!function_exists('chrono_forge_safe_log')) {
+    function chrono_forge_safe_log($message, $level = 'info') {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            $timestamp = date('Y-m-d H:i:s');
+            error_log("[{$timestamp}] [ChronoForge {$level}] {$message}");
+        }
+    }
+}
+
+/**
  * Получить настройки плагина
  * 
  * @param string $key Ключ настройки (опционально)
