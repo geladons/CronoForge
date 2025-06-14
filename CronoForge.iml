@@ -2,7 +2,12 @@
 <module type="GENERAL_MODULE" version="4">
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
-    <content url="file://$MODULE_DIR$" />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/chrono-forge/tests" isTestSource="true" packagePrefix="ChronoForge\Tests\" />
+      <sourceFolder url="file://$MODULE_DIR$/wordpress/wp-content/plugins/chrono-forge/src" isTestSource="false" packagePrefix="ChronoForge\" />
+      <sourceFolder url="file://$MODULE_DIR$/wordpress/wp-content/plugins/chrono-forge/tests" isTestSource="true" packagePrefix="ChronoForge\Tests\" />
+      <sourceFolder url="file://$MODULE_DIR$/chrono-forge/includes" isTestSource="false" packagePrefix="ChronoForge\" />
+    </content>
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
